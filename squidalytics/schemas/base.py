@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, cast
 
 
@@ -74,9 +73,10 @@ class JSONDataClass:
         return annotations
 
     def __repr__(self, level=1) -> str:
-        # Show list of keys and their types all the way down the tree
+        """Print the object tree in a human readable format."""
         out = self.__class__.__name__ + ":\n" if level == 1 else ""
         tabs = " " * level
+
         for key, value in self.__dict__.items():
             if isinstance(value, JSONDataClass):
                 out += f"{tabs}{key}:\n" + value.__repr__(level + 1)
@@ -89,6 +89,15 @@ class JSONDataClass:
         return out
 
     def __getitem__(self, key: str | tuple[str | int]) -> Any:
+        """Get the value of the given key. If the key is a tuple, then enable
+        numpy style indexing.
+
+        Args:
+            key (str | tuple[str  |  int]): The key to get the value of.
+
+        Returns:
+            Any: The value of the given key.
+        """
         if isinstance(key, str):
             return getattr(self, key)
 
@@ -121,7 +130,7 @@ class JSONDataClass:
 
     def search_by_id(self, id: str) -> Any:
         """Search the object tree for the object with the given id. Indexing is
-        done on the first call to this method, and then the generated index is 
+        done on the first call to this method, and then the generated index is
         used for subsequent calls.
 
         Args:
