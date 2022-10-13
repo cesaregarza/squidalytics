@@ -18,36 +18,34 @@ class JSONDataClass:
         """
         # This class should be used as a base class for all dataclasses
         for key, value in self.__dict__.items():
-            # This is a hack to get around the fact that there is a key in the
-            # JSON that has a double underscore prefix. Since double underscore
-            # triggers name mangling, we circumvent that by using a single
-            # underscore prefix in dataclass definition instead, and then
-            # replacing it with a double underscore here.
-            if key[0] == "_":
-                keyval = "_" + key
-            else:
-                keyval = key
 
             try:
                 if isinstance(value, dict):
                     annotations = self.get_annotations()
-                    cls = annotations[keyval]
-                    # print(f"cls: {cls.__name__}, key: {keyval}")
-                    setattr(self, keyval, cls(**value))
+                    cls = annotations[key]
+                    print(f"cls: {cls.__name__}, key: {key}")
+                    # This is a hack to get around the fact that there is a key
+                    # in the JSON that has a double underscore prefix. Since
+                    # double underscore triggers name mangling,
+                    # we circumvent that by using a single underscore prefix in
+                    # dataclass definition instead, and then replacing the
+                    # double underscore with a single underscore here.
+                    value = {k.replace("__", "_"): v for k, v in value.items()}
+                    setattr(self, key, cls(**value))
                 elif (
                     isinstance(value, list)
                     and (len(value) > 0)
                     and isinstance(value[0], dict)
                 ):
                     annotations = self.get_annotations()
-                    super_cls = annotations[keyval]
+                    super_cls = annotations[key]
                     cls = super_cls.__args__[0]
-                    # print(
-                    #     f"super_cls: {super_cls.__name__}, "
-                    #     + f"cls: {cls.__name__}, "
-                    #     + f"key: {keyval}"
-                    # )
-                    setattr(self, keyval, [cls(**item) for item in value])
+                    print(
+                        f"super_cls: {super_cls.__name__}, "
+                        + f"cls: {cls.__name__}, "
+                        + f"key: {key}"
+                    )
+                    setattr(self, key, [cls(**item) for item in value])
             except Exception as e:
                 if not isinstance(e, SecondaryException):
                     # print(f"key: {keyval}, value: {value}")

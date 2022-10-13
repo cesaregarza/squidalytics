@@ -6,6 +6,9 @@ from squidalytics.schemas.overview.history_groups import (
     previousHistoryDetailSchema,
     weaponImageSchema,
 )
+from squidalytics.schemas.overview.history_groups_only_first import (
+    historyGroupsOnlyFirstSchema,
+)
 
 
 @dataclass(repr=False)
@@ -82,19 +85,25 @@ class waveResultsNodeSchema(JSONDataClass):
 
 
 @dataclass(repr=False)
-class coopHistoryNodeDetails(JSONDataClass):
+class coopHistoryDetailsNodeSchema(JSONDataClass):
     id: str
     weapons: list[weaponsNodeSchema]
     resultWave: int
     coopStage: coopStageSchema
     afterGrade: afterGradeSchema
+    afterGradePoint: int
     gradePointDiff: str
     myResult: myResultSchema
     memberResults: list[myResultSchema]
     waveResults: list[waveResultsNodeSchema]
     bossResult: None = None
-    nextHistoryDetail: nextHistoryDetailSchema | None = None
-    previousHistoryDetail: previousHistoryDetailSchema | None = None
+    nextHistoryDetail: nextHistoryDetailSchema = None
+    previousHistoryDetail: previousHistoryDetailSchema = None
+
+
+@dataclass(repr=False)
+class coopHistoryDetailsSchema(JSONDataClass):
+    nodes: list[coopHistoryDetailsNodeSchema]
 
 
 @dataclass(repr=False)
@@ -104,3 +113,21 @@ class coopHistoryGroupsNodeSchema(JSONDataClass):
     mode: str
     rule: str
     highestResult: highestResultSchema
+    historyDetails: coopHistoryDetailsSchema
+
+
+@dataclass(repr=False)
+class coopHistoryGroupsSchema(JSONDataClass):
+    nodes: list[coopHistoryGroupsNodeSchema]
+
+
+@dataclass(repr=False)
+class CoopResultSchema(JSONDataClass):
+    regularAverageClearWave: float
+    regularGrade: RegularGradeSchema
+    regularGradePoint: int
+    monthlyGear: monthlyGearSchema
+    scale: scaleSchema
+    pointCard: pointCardSchema
+    historyGroups: coopHistoryGroupsSchema
+    historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema

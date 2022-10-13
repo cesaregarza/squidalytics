@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from squidalytics.schemas.base import JSONDataClass
+from squidalytics.schemas.overview.coop import CoopResultSchema
 from squidalytics.schemas.overview.history_groups import (
     anarchyHistoryGroupsSchema,
     regularHistoryGroupsSchema,
@@ -33,10 +34,3 @@ class regularBattleHistorySchema(JSONDataClass):
     historyGroups: regularHistoryGroupsSchema
     historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema
     summary: SummarySchema
-
-
-# @dataclass(repr=False)
-# class coopResultSchema(JSONDataClass):
-#     historyGroups: historyGroupsSchema
-#     historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema
-#     regularAverageClearWave: float
