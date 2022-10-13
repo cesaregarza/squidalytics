@@ -43,6 +43,7 @@ class weaponSchema(JSONDataClass):
 class playerSchema(JSONDataClass):
     weapon: weaponSchema
     id: str
+    festGrade: int = None
 
 
 @dataclass(repr=False)

@@ -34,3 +34,20 @@ class regularBattleHistorySchema(JSONDataClass):
     historyGroups: regularHistoryGroupsSchema
     historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema
     summary: SummarySchema
+
+
+class DataSchema(JSONDataClass):
+    def __init__(self, overview_json: list[dict]) -> None:
+        def json_idx(idx: int) -> dict:
+            map = {
+                0: "regularBattleHistories",
+                1: "bankaraBattleHistories",
+                2: "privateBattleHistories",
+                3: "coopResult",
+            }
+            return overview_json[idx]["data"][map[idx]]
+
+        self.regularBattleHistories = regularBattleHistorySchema(**json_idx(0))
+        self.anarchyBattleHistories = anarchyBattleHistorySchema(**json_idx(1))
+        self.privateBattleHistories = regularBattleHistorySchema(**json_idx(2))
+        self.coopResults = CoopResultSchema(**json_idx(3))

@@ -23,7 +23,7 @@ class JSONDataClass:
                 if isinstance(value, dict):
                     annotations = self.get_annotations()
                     cls = annotations[key]
-                    print(f"cls: {cls.__name__}, key: {key}")
+                    # print(f"cls: {cls.__name__}, key: {key}")
                     # This is a hack to get around the fact that there is a key
                     # in the JSON that has a double underscore prefix. Since
                     # double underscore triggers name mangling,
@@ -40,11 +40,11 @@ class JSONDataClass:
                     annotations = self.get_annotations()
                     super_cls = annotations[key]
                     cls = super_cls.__args__[0]
-                    print(
-                        f"super_cls: {super_cls.__name__}, "
-                        + f"cls: {cls.__name__}, "
-                        + f"key: {key}"
-                    )
+                    # print(
+                    #     f"super_cls: {super_cls.__name__}, "
+                    #     + f"cls: {cls.__name__}, "
+                    #     + f"key: {key}"
+                    # )
                     setattr(self, key, [cls(**item) for item in value])
             except Exception as e:
                 if not isinstance(e, SecondaryException):
@@ -79,9 +79,17 @@ class JSONDataClass:
             if isinstance(value, JSONDataClass):
                 out += f"{tabs}{key}:\n" + value.__repr__(level + 1)
             elif isinstance(value, list):
-                out += tabs + f"{key}: list[{value[0].__class__.__name__}]\n"
+                if len(value) == 0:
+                    out += f"{tabs}{key}: list[]\n"
+                    continue
+                idx = 1 if len(value) > 1 else 0
+                out += (
+                    tabs
+                    + f"{key}: "
+                    + f"list[{value[idx].__class__.__name__}]\n"
+                )
                 # Assume all items in the list are of the same type
-                out += value[0].__repr__(level + 1)
+                out += value[idx].__repr__(level + 1)
             else:
                 out += tabs + f"{key}: {type(value).__name__}\n"
         return out

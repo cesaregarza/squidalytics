@@ -31,8 +31,8 @@ class PlayerSchema(JSONDataClass):
 
 @dataclass(repr=False)
 class historyDetailsNodeSchema(JSONDataClass):
-    player: PlayerSchema
     id: str
+    player: PlayerSchema = None
 
 
 @dataclass(repr=False)
