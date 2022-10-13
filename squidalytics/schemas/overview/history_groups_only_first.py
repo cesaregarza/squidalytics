@@ -30,5 +30,21 @@ class PlayerSchema(JSONDataClass):
 
 
 @dataclass
+class historyDetailsNodeSchema(JSONDataClass):
+    player: PlayerSchema
+    id: str
+
+
+@dataclass
+class historyDetailsSchema(JSONDataClass):
+    nodes: list[historyDetailsNodeSchema]
+
+
+@dataclass
+class historyGroupsOnlyFirstNodesSchema(JSONDataClass):
+    historyDetails: historyDetailsSchema
+
+
+@dataclass
 class historyGroupsOnlyFirstSchema(JSONDataClass):
-    nodes: list[PlayerSchema]
+    nodes: list[historyGroupsOnlyFirstNodesSchema]

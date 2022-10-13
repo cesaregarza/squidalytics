@@ -47,9 +47,9 @@ class playerSchema(JSONDataClass):
 
 @dataclass
 class myTeamResultSchema(JSONDataClass):
-    paintPoint: int  = None
-    paintRatio: float  = None
-    score: int  = None
+    paintPoint: int = None
+    paintRatio: float = None
+    score: int = None
 
     def which(self) -> str:
         if self.score is not None:
@@ -96,15 +96,15 @@ class baseHistoryDetailsNodesSchema(JSONDataClass):
 class anarchyHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     bankaraMatch: bankaraMatchSchema
     udemae: str
-    nextHistoryDetail: nextHistoryDetailSchema  = None
-    previousHistoryDetail: previousHistoryDetailSchema  = None
+    nextHistoryDetail: nextHistoryDetailSchema = None
+    previousHistoryDetail: previousHistoryDetailSchema = None
 
 
 @dataclass
 class regularHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     playedTime: str
-    nextHistoryDetail: nextHistoryDetailSchema  = None
-    previousHistoryDetail: previousHistoryDetailSchema  = None
+    nextHistoryDetail: nextHistoryDetailSchema = None
+    previousHistoryDetail: previousHistoryDetailSchema = None
 
 
 @dataclass

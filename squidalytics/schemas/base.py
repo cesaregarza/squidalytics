@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 
+
 class SecondaryException(Exception):
     pass
+
 
 class JSONDataClass:
     def __post_init__(self) -> None:
@@ -24,7 +26,7 @@ class JSONDataClass:
                     # is a subclass.
                     annotations = self.get_annotations()
                     cls = annotations[keyval]
-                    print(f"cls: {cls.__name__}, key: {keyval}")
+                    # print(f"cls: {cls.__name__}, key: {keyval}")
                     setattr(self, keyval, cls(**value))
                 elif (
                     isinstance(value, list)
@@ -34,15 +36,19 @@ class JSONDataClass:
                     annotations = self.get_annotations()
                     super_cls = annotations[keyval]
                     cls = super_cls.__args__[0]
-                    print(f"super_cls: {super_cls.__name__} cls: {cls.__name__}, key: {keyval}")
+                    # print(
+                    #     f"super_cls: {super_cls.__name__}, "
+                    #     + f"cls: {cls.__name__}, "
+                    #     + f"key: {keyval}"
+                    # )
                     setattr(self, keyval, [cls(**item) for item in value])
             except Exception as e:
                 if not isinstance(e, SecondaryException):
-                    print(f"key: {keyval}, value: {value}")
+                    # print(f"key: {keyval}, value: {value}")
                     raise SecondaryException from e
                 else:
                     raise e
-    
+
     @classmethod
     def get_annotations(cls) -> dict[str, type]:
         annotations = {}

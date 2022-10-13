@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 
 from squidalytics.schemas.base import JSONDataClass
-from squidalytics.schemas.overview.history_groups import anarchyHistoryGroupsSchema, regularHistoryGroupsSchema
+from squidalytics.schemas.overview.history_groups import (
+    anarchyHistoryGroupsSchema,
+    regularHistoryGroupsSchema,
+)
 from squidalytics.schemas.overview.history_groups_only_first import (
     historyGroupsOnlyFirstSchema,
 )
