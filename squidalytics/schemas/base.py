@@ -7,13 +7,22 @@ class SecondaryException(Exception):
 
 class JSONDataClass:
     def __post_init__(self) -> None:
+        """After initializing the dataclass, check if any of the fields are
+        dictionaries. If so, initialize the corresponding annotation with the
+        dictionary as the argument.
+
+        Raises:
+            SecondaryException: If the key of the dictionary is not found in the
+                result of the get_annotations() method.
+            e: SecondaryExceptions get passed up the chain.
+        """
         # This class should be used as a base class for all dataclasses
         for key, value in self.__dict__.items():
             # This is a hack to get around the fact that there is a key in the
             # JSON that has a double underscore prefix. Since double underscore
             # triggers name mangling, we circumvent that by using a single
-            # underscore prefix instead, and then replacing it with a double
-            # underscore.
+            # underscore prefix in dataclass definition instead, and then
+            # replacing it with a double underscore here.
             if key[0] == "_":
                 keyval = "_" + key
             else:
@@ -21,9 +30,6 @@ class JSONDataClass:
 
             try:
                 if isinstance(value, dict):
-                    # Find the class that corresponds to the value of the key
-                    # in the JSON. Wrap in try/except in case the specific class
-                    # is a subclass.
                     annotations = self.get_annotations()
                     cls = annotations[keyval]
                     # print(f"cls: {cls.__name__}, key: {keyval}")
@@ -51,6 +57,13 @@ class JSONDataClass:
 
     @classmethod
     def get_annotations(cls) -> dict[str, type]:
+        """Get the annotations of the class, but also include the annotations
+        of any ancestor classes.
+
+        Returns:
+            dict[str, type]: A dictionary of the annotations of the class and
+                the annotations of any ancestor classes.
+        """
         annotations = {}
         for c in cls.mro():
             try:
