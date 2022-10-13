@@ -10,7 +10,7 @@ from squidalytics.schemas.overview.history_groups_only_first import (
 )
 
 
-@dataclass
+@dataclass(repr=False)
 class SummarySchema(JSONDataClass):
     assistAverage: float
     deathAverage: float
@@ -21,21 +21,21 @@ class SummarySchema(JSONDataClass):
     win: int
 
 
-@dataclass
+@dataclass(repr=False)
 class anarchyBattleHistorySchema(JSONDataClass):
     historyGroups: anarchyHistoryGroupsSchema
     historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema
     summary: SummarySchema
 
 
-@dataclass
+@dataclass(repr=False)
 class regularBattleHistorySchema(JSONDataClass):
     historyGroups: regularHistoryGroupsSchema
     historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema
     summary: SummarySchema
 
 
-# @dataclass
+# @dataclass(repr=False)
 # class coopResultSchema(JSONDataClass):
 #     historyGroups: historyGroupsSchema
 #     historyGroupsOnlyFirst: historyGroupsOnlyFirstSchema

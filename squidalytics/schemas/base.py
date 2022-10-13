@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any, cast
 
 
 class SecondaryException(Exception):
@@ -71,3 +72,64 @@ class JSONDataClass:
             except AttributeError:
                 pass
         return annotations
+
+    def __repr__(self, level=1) -> str:
+        # Show list of keys and their types all the way down the tree
+        out = self.__class__.__name__ + ":\n" if level == 1 else ""
+        tabs = " " * level
+        for key, value in self.__dict__.items():
+            if isinstance(value, JSONDataClass):
+                out += f"{tabs}{key}:\n" + value.__repr__(level + 1)
+            elif isinstance(value, list):
+                out += tabs + f"{key}: list[{value[0].__class__.__name__}]\n"
+                # Assume all items in the list are of the same type
+                out += value[0].__repr__(level + 1)
+            else:
+                out += tabs + f"{key}: {type(value).__name__}\n"
+        return out
+
+    def __getitem__(self, key: str | tuple[str | int]) -> Any:
+        if isinstance(key, str):
+            return getattr(self, key)
+
+        # If the key is a tuple, recursively call __getitem__ on the
+        # corresponding attribute.
+        curent_level = self
+        for k in key:
+            curent_level = curent_level[k]
+
+        return curent_level
+
+    def __index_ids(self) -> dict[str, Any]:
+        """Index all the ids in the object tree. This is used to get the
+        corresponding object from the id.
+
+        Returns:
+            dict[str, Any]: A dictionary of all the ids in the object tree.
+        """
+        id_index = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, JSONDataClass):
+                id_index.update(**value.__index_ids())
+            elif isinstance(value, list):
+                for item in value:
+                    item = cast(JSONDataClass, item)
+                    id_index.update(**item.__index_ids())
+            elif key == "id":
+                id_index[value] = self
+        return id_index
+
+    def search_by_id(self, id: str) -> Any:
+        """Search the object tree for the object with the given id. Indexing is
+        done on the first call to this method, and then the generated index is 
+        used for subsequent calls.
+
+        Args:
+            id (str): The id of the object to search for.
+
+        Returns:
+            Any: The object with the given id.
+        """
+        if getattr(self, "__id_index", None) is None:
+            self.__id_index = self.__index_ids()
+        return self.__id_index[id]

@@ -3,49 +3,49 @@ from dataclasses import dataclass
 from squidalytics.schemas.base import JSONDataClass
 
 
-@dataclass
+@dataclass(repr=False)
 class vsModeSchema(JSONDataClass):
     mode: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class vsRuleSchema(JSONDataClass):
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class vsStageImageSchema(JSONDataClass):
     url: str
 
 
-@dataclass
+@dataclass(repr=False)
 class vsStageSchema(JSONDataClass):
     image: vsStageImageSchema
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class weaponImageSchema(JSONDataClass):
     url: str
 
 
-@dataclass
+@dataclass(repr=False)
 class weaponSchema(JSONDataClass):
     image: weaponImageSchema
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class playerSchema(JSONDataClass):
     weapon: weaponSchema
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class myTeamResultSchema(JSONDataClass):
     paintPoint: int = None
     paintRatio: float = None
@@ -60,27 +60,27 @@ class myTeamResultSchema(JSONDataClass):
             pass
 
 
-@dataclass
+@dataclass(repr=False)
 class myTeamSchema(JSONDataClass):
     result: myTeamResultSchema
 
 
-@dataclass
+@dataclass(repr=False)
 class bankaraMatchSchema(JSONDataClass):
     earnedUdemaePoint: None = None
 
 
-@dataclass
+@dataclass(repr=False)
 class nextHistoryDetailSchema(JSONDataClass):
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class previousHistoryDetailSchema(JSONDataClass):
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class baseHistoryDetailsNodesSchema(JSONDataClass):
     id: str
     vsMode: vsModeSchema
@@ -92,7 +92,7 @@ class baseHistoryDetailsNodesSchema(JSONDataClass):
     knockout: str
 
 
-@dataclass
+@dataclass(repr=False)
 class anarchyHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     bankaraMatch: bankaraMatchSchema
     udemae: str
@@ -100,24 +100,24 @@ class anarchyHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     previousHistoryDetail: previousHistoryDetailSchema = None
 
 
-@dataclass
+@dataclass(repr=False)
 class regularHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     playedTime: str
     nextHistoryDetail: nextHistoryDetailSchema = None
     previousHistoryDetail: previousHistoryDetailSchema = None
 
 
-@dataclass
+@dataclass(repr=False)
 class anarchyHistoryDetailsSchema(JSONDataClass):
     nodes: list[anarchyHistoryDetailsNodesSchema]
 
 
-@dataclass
+@dataclass(repr=False)
 class regularHistoryDetailsSchema(JSONDataClass):
     nodes: list[regularHistoryDetailsNodesSchema]
 
 
-@dataclass
+@dataclass(repr=False)
 class bankaraMatchChallengeSchema(JSONDataClass):
     winCount: int
     loseCount: int
@@ -130,22 +130,22 @@ class bankaraMatchChallengeSchema(JSONDataClass):
     earnedUdemaePoint: int
 
 
-@dataclass
+@dataclass(repr=False)
 class anarchyHistoryGroupsNodesSchema(JSONDataClass):
     bankaraMatchChallenge: bankaraMatchChallengeSchema
     historyDetails: anarchyHistoryDetailsSchema
 
 
-@dataclass
+@dataclass(repr=False)
 class regularHistoryGroupsNodesSchema(JSONDataClass):
     historyDetails: regularHistoryDetailsSchema
 
 
-@dataclass
+@dataclass(repr=False)
 class anarchyHistoryGroupsSchema(JSONDataClass):
     nodes: list[anarchyHistoryGroupsNodesSchema]
 
 
-@dataclass
+@dataclass(repr=False)
 class regularHistoryGroupsSchema(JSONDataClass):
     nodes: list[regularHistoryGroupsNodesSchema]

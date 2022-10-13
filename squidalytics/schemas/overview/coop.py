@@ -8,27 +8,27 @@ from squidalytics.schemas.overview.history_groups import (
 )
 
 
-@dataclass
+@dataclass(repr=False)
 class RegularGradeSchema(JSONDataClass):
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class monthlyGearSchema(JSONDataClass):
     _typename: str
     name: str
     image: weaponImageSchema
 
 
-@dataclass
+@dataclass(repr=False)
 class scaleSchema(JSONDataClass):
     gold: int
     silver: int
     bronze: int
 
 
-@dataclass
+@dataclass(repr=False)
 class pointCardSchema(JSONDataClass):
     defeatBossCount: int
     deliverCount: int
@@ -39,49 +39,49 @@ class pointCardSchema(JSONDataClass):
     totalPoint: int
 
 
-@dataclass
+@dataclass(repr=False)
 class gradeSchema(JSONDataClass):
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class highestResultSchema(JSONDataClass):
     grade: gradeSchema
     gradePoint: int
     jobScore: int
 
 
-@dataclass
+@dataclass(repr=False)
 class weaponsNodeSchema(JSONDataClass):
     name: str
     image: weaponImageSchema
 
 
-@dataclass
+@dataclass(repr=False)
 class coopStageSchema(JSONDataClass):
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class afterGradeSchema(JSONDataClass):
     name: str
     id: str
 
 
-@dataclass
+@dataclass(repr=False)
 class myResultSchema(JSONDataClass):
     deliverCount: int
     goldenDeliverCount: int
 
 
-@dataclass
+@dataclass(repr=False)
 class waveResultsNodeSchema(JSONDataClass):
     waveNumber: int
 
 
-@dataclass
+@dataclass(repr=False)
 class coopHistoryNodeDetails(JSONDataClass):
     id: str
     weapons: list[weaponsNodeSchema]
@@ -97,7 +97,7 @@ class coopHistoryNodeDetails(JSONDataClass):
     previousHistoryDetail: previousHistoryDetailSchema | None = None
 
 
-@dataclass
+@dataclass(repr=False)
 class coopHistoryGroupsNodeSchema(JSONDataClass):
     startTime: str
     endTime: str
