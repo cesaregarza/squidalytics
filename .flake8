@@ -1,0 +1,11 @@
+[flake8]
+max-line-length = 80
+extend-ignore = E203
+per-file-ignores = 
+    __init__.py:F401
+    test_*.py:DAR101, DAR201
+
+[darglint]
+docstring_style = google
+strictness = full
+indentation = 4
