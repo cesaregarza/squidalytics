@@ -10,6 +10,11 @@ from squidalytics.schemas.general import (
     vsStageSchema,
     weaponSchema,
 )
+from squidalytics.constants import (
+    PRIMARY_ONLY,
+    ABILITIES,
+    ALL_ABILITIES,
+)
 
 
 @dataclass(repr=False)
@@ -69,6 +74,46 @@ class gearSchema(JSONDataClass):
     image: imageSchema = None
     thumbnailImage: imageSchema = None
 
+    def calculate_abilities(self) -> dict[str, int]:
+        """Calculate the total ability points for each ability, even primary
+        only abilities.
+
+        Returns:
+            dict[str, int]: A dictionary of ability names and their total
+        """
+        abilities = {ability: 0 for ability in ALL_ABILITIES}
+        primary_ability = self.primaryGearPower.name
+        abilities[primary_ability] += 10
+        for ability in self.additionalGearPowers:
+            if ability.name.lower() == "unknown":
+                continue
+            abilities[ability.name] += 3
+        return abilities
+    
+    def classify_gear(self) -> str:
+        """Classify the gear based on the abilities it has.
+
+        Returns:
+            str: The gear classification, one of "perfect", "complete",
+            "incomplete", or "mixed".
+        """
+        abilities = self.calculate_abilities()
+        # Primary adds 10, secondary adds 3. 19 points is thus perfect gear.
+        if any(abilities[ability] == 19 for ability in ABILITIES):
+            return "perfect"
+        
+        # If the sum of all abilities is less than 19, it hasn't unlocked
+        # all of the sub-abilities.
+        if sum(abilities[ability] for ability in ABILITIES) < 19:
+            return "incomplete"
+        
+        # The only way to get 9 points is to have 3 of the same sub-ability.
+        if any(abilities[ability] == 9 for ability in ABILITIES):
+            return "complete"
+        
+        # Otherwise, it's a mixed gear.
+        return "mixed"
+
 
 @dataclass(repr=False)
 class resultSchema(JSONDataClass):
@@ -94,6 +139,14 @@ class playerSchema(JSONDataClass):
     clothingGear: gearSchema
     shoesGear: gearSchema
     paint: int
+
+    def calculate_abilities(self) -> dict[str, int]:
+        abilities = {ability: 0 for ability in ALL_ABILITIES}
+        for gear in [self.headGear, self.clothingGear, self.shoesGear]:
+            gear_abilities = gear.calculate_abilities()
+            for ability, value in gear_abilities.items():
+                abilities[ability] += value
+        return abilities
 
 
 @dataclass(repr=False)
