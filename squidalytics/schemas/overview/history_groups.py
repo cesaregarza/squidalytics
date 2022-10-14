@@ -1,40 +1,18 @@
 from dataclasses import dataclass
 
 from squidalytics.schemas.base import JSONDataClass
-
-
-@dataclass(repr=False)
-class vsModeSchema(JSONDataClass):
-    mode: str
-    id: str
-
-
-@dataclass(repr=False)
-class vsRuleSchema(JSONDataClass):
-    name: str
-    id: str
-
-
-@dataclass(repr=False)
-class vsStageImageSchema(JSONDataClass):
-    url: str
-
-
-@dataclass(repr=False)
-class vsStageSchema(JSONDataClass):
-    image: vsStageImageSchema
-    name: str
-    id: str
-
-
-@dataclass(repr=False)
-class weaponImageSchema(JSONDataClass):
-    url: str
+from squidalytics.schemas.general import (
+    idSchema,
+    imageSchema,
+    vsModeSchema,
+    vsRuleSchema,
+    vsStageSchema,
+)
 
 
 @dataclass(repr=False)
 class weaponSchema(JSONDataClass):
-    image: weaponImageSchema
+    image: imageSchema
     name: str
     id: str
 
@@ -72,16 +50,6 @@ class bankaraMatchSchema(JSONDataClass):
 
 
 @dataclass(repr=False)
-class nextHistoryDetailSchema(JSONDataClass):
-    id: str
-
-
-@dataclass(repr=False)
-class previousHistoryDetailSchema(JSONDataClass):
-    id: str
-
-
-@dataclass(repr=False)
 class baseHistoryDetailsNodesSchema(JSONDataClass):
     id: str
     vsMode: vsModeSchema
@@ -97,15 +65,15 @@ class baseHistoryDetailsNodesSchema(JSONDataClass):
 class anarchyHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     bankaraMatch: bankaraMatchSchema
     udemae: str
-    nextHistoryDetail: nextHistoryDetailSchema = None
-    previousHistoryDetail: previousHistoryDetailSchema = None
+    nextHistoryDetail: idSchema = None
+    previousHistoryDetail: idSchema = None
 
 
 @dataclass(repr=False)
 class regularHistoryDetailsNodesSchema(baseHistoryDetailsNodesSchema):
     playedTime: str
-    nextHistoryDetail: nextHistoryDetailSchema = None
-    previousHistoryDetail: previousHistoryDetailSchema = None
+    nextHistoryDetail: idSchema = None
+    previousHistoryDetail: idSchema = None
 
 
 @dataclass(repr=False)

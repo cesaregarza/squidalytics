@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 
 class SecondaryException(Exception):
@@ -39,13 +39,27 @@ class JSONDataClass:
                 ):
                     annotations = self.get_annotations()
                     super_cls = annotations[key]
-                    cls = super_cls.__args__[0]
+                    # Try/except block to catch the case where the list is
+                    # empty.
+                    try:
+                        cls = super_cls.__args__[0]
+                    except AttributeError:
+                        setattr(self, key, [])
+                        continue
                     # print(
                     #     f"super_cls: {super_cls.__name__}, "
                     #     + f"cls: {cls.__name__}, "
                     #     + f"key: {key}"
                     # )
-                    setattr(self, key, [cls(**item) for item in value])
+                    # Replace double underscores with single underscores for
+                    # the same reason as above.
+                    attrset = [
+                        cls(
+                            **{k.replace("__", "_"): v for k, v in item.items()}
+                        )
+                        for item in value
+                    ]
+                    setattr(self, key, attrset)
             except Exception as e:
                 if not isinstance(e, SecondaryException):
                     # print(f"key: {keyval}, value: {value}")
@@ -89,7 +103,11 @@ class JSONDataClass:
                     + f"list[{value[idx].__class__.__name__}]\n"
                 )
                 # Assume all items in the list are of the same type
-                out += value[idx].__repr__(level + 1)
+                try:
+                    out += value[idx].__repr__(level + 1)
+                except TypeError as e:
+                    # If list contains None, then the above will fail.
+                    out += value[idx].__repr__() + "\n"
             else:
                 out += tabs + f"{key}: {type(value).__name__}\n"
         return out
@@ -148,3 +166,19 @@ class JSONDataClass:
         if getattr(self, "__id_index", None) is None:
             self.__id_index = self.__index_ids()
         return self.__id_index[id]
+
+    def traverse_tree(self, func: Callable[[Any], Any]) -> None:
+        """Traverse the object tree and apply the given function to each object.
+
+        Args:
+            func (Callable[[Any], Any]): The function to apply to each object.
+        """
+        for key, value in self.__dict__.items():
+            if isinstance(value, JSONDataClass):
+                value.traverse_tree(func)
+            elif isinstance(value, list):
+                for item in value:
+                    item = cast(JSONDataClass, item)
+                    item.traverse_tree(func)
+            else:
+                func(self)

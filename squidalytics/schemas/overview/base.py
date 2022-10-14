@@ -36,7 +36,7 @@ class regularBattleHistorySchema(JSONDataClass):
     summary: SummarySchema
 
 
-class DataSchema(JSONDataClass):
+class OverviewSchema(JSONDataClass):
     def __init__(self, overview_json: list[dict]) -> None:
         def json_idx(idx: int) -> dict:
             map = {
