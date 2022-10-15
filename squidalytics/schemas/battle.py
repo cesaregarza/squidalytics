@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any
 
 from squidalytics.constants import ABILITIES, ALL_ABILITIES, PRIMARY_ONLY
 from squidalytics.schemas.base import JSONDataClass
@@ -321,5 +322,29 @@ class vsHistoryDetailSchema(JSONDataClass):
 
 
 @dataclass(repr=False)
-class battleSchema(JSONDataClass):
+class battleDataSchema(JSONDataClass):
     vsHistoryDetail: vsHistoryDetailSchema
+
+
+@dataclass(repr=False)
+class battleNodeSchema(JSONDataClass):
+    data: battleDataSchema
+
+
+class battleSchema(JSONDataClass):
+    def __init__(self, json: list[dict]) -> None:
+        try:
+            self.data = [battleNodeSchema(**result) for result in json]
+        except TypeError as e:
+            if not all(isinstance(result, battleNodeSchema) for result in json):
+                raise e
+            self.data = json
+
+    def __getitem__(self, key: int | slice | tuple[str | int]) -> Any:
+        if isinstance(key, tuple):
+            first_index = key[0]
+            other_index = key[1:]
+            return self.data[first_index][other_index]
+        elif isinstance(key, slice):
+            return battleSchema(self.data[key])
+        return self.data[key]

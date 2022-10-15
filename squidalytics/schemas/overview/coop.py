@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 
 from squidalytics.schemas.base import JSONDataClass
-from squidalytics.schemas.overview.history_groups import (
-    nextHistoryDetailSchema,
-    previousHistoryDetailSchema,
-    weaponImageSchema,
+from squidalytics.schemas.general import (
+    idSchema,
+    imageSchema,
 )
 from squidalytics.schemas.overview.history_groups_only_first import (
     historyGroupsOnlyFirstSchema,
@@ -21,7 +20,7 @@ class RegularGradeSchema(JSONDataClass):
 class monthlyGearSchema(JSONDataClass):
     _typename: str
     name: str
-    image: weaponImageSchema
+    image: imageSchema
 
 
 @dataclass(repr=False)
@@ -58,7 +57,7 @@ class highestResultSchema(JSONDataClass):
 @dataclass(repr=False)
 class weaponsNodeSchema(JSONDataClass):
     name: str
-    image: weaponImageSchema
+    image: imageSchema
 
 
 @dataclass(repr=False)
@@ -97,8 +96,8 @@ class coopHistoryDetailsNodeSchema(JSONDataClass):
     memberResults: list[myResultSchema]
     waveResults: list[waveResultsNodeSchema]
     bossResult: None = None
-    nextHistoryDetail: nextHistoryDetailSchema = None
-    previousHistoryDetail: previousHistoryDetailSchema = None
+    nextHistoryDetail: idSchema = None
+    previousHistoryDetail: idSchema = None
 
 
 @dataclass(repr=False)
