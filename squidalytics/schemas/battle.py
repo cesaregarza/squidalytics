@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+import pandas as pd
+
 from squidalytics.constants import ABILITIES, ALL_ABILITIES, PRIMARY_ONLY
 from squidalytics.schemas.base import JSONDataClass
 from squidalytics.schemas.general import (
@@ -189,12 +191,24 @@ class playerFullSchema(playerSchema):
             "weapon_id": self.weapon.id,
             "species": self.species,
             "paint": self.paint,
-            "elimination": self.result.kill,
-            "kill": self.result.kill - self.result.assist,
-            "death": self.result.death,
-            "special": self.result.special,
-            "assist": self.result.assist,
         }
+        if self.result:
+            append = {
+                "elimination": self.result.kill,
+                "kill": self.result.kill - self.result.assist,
+                "death": self.result.death,
+                "special": self.result.special,
+                "assist": self.result.assist,
+            }
+        else:
+            append = {
+                "elimination": 0,
+                "kill": 0,
+                "death": 0,
+                "special": 0,
+                "assist": 0,
+            }
+        out.update(append)
         return out
 
 
@@ -218,17 +232,18 @@ class teamSchema(JSONDataClass):
         return any(player.isMyself for player in self.players)
 
     @property
-    def score(self) -> int:
+    def score(self) -> int | float:
         """Get the team's score.
 
         Returns:
             int: The team's score.
         """
-        return (
-            self.result.score
-            if self.result.score is not None
-            else self.result.paintRatio
-        )
+        if self.result and self.result.score:
+            return self.result.score
+        elif self.result and self.result.paintRatio:
+            return self.result.paintRatio
+        else:
+            return 0
 
     def player_summary(self, detailed: bool = False) -> dict:
         """Get a summary of the team's players.
@@ -250,14 +265,14 @@ class teamSchema(JSONDataClass):
         for player in out:
 
             def ratio(key: str) -> float:
-                return player[key] / team_stats[key]
+                return player[key] / max(team_stats[key], 1)
 
             player["kill_ratio"] = ratio("kill")
             player["death_ratio"] = ratio("death")
             player["special_ratio"] = ratio("special")
             player["assist_ratio"] = ratio("assist")
             player["paint_ratio"] = ratio("paint")
-            player["kdr"] = player["kill"] / player["death"]
+            player["kdr"] = player["kill"] / max(player["death"], 1)
         return out
 
     def team_summary(self, player_summaries: list[dict] | None = None) -> dict:
@@ -280,7 +295,7 @@ class teamSchema(JSONDataClass):
             "special": sum(player["special"] for player in player_summaries),
             "assist": sum(player["assist"] for player in player_summaries),
             "paint": sum(player["paint"] for player in player_summaries),
-            "result": self.score,
+            "score": self.score,
         }
         return team_total
 
@@ -364,6 +379,10 @@ class vsHistoryDetailSchema(JSONDataClass):
                 team.player_summary(True) for team in self.otherTeams
             ],
             "awards": self.count_awards(),
+            "my_team_stats": self.myTeam.team_summary(),
+            "other_team_stats": [
+                team.team_summary() for team in self.otherTeams
+            ],
         }
         return out
 
@@ -376,6 +395,54 @@ class battleDataSchema(JSONDataClass):
 @dataclass(repr=False)
 class battleNodeSchema(JSONDataClass):
     data: battleDataSchema
+
+    def match_completed(self) -> bool:
+        """Check if the match is completed.
+
+        Returns:
+            bool: True if the match is completed, False otherwise.
+        """
+        return self.data.vsHistoryDetail.judgement == "COMPLETE"
+
+    def match_summary(self) -> dict[str, int | float | str | None]:
+        """Get a flat summary of the match, with no nested dictionaries.
+
+        Returns:
+            dict: A dictionary of the match's stats. No value is a dictionary.
+        """
+        if len(self.data.vsHistoryDetail.otherTeams) > 1:
+            raise ValueError("Flat summary does not support tricolor matches.")
+        summary = self.data.vsHistoryDetail.summary()
+        summary.pop("my_team")
+        summary.pop("other_teams")
+        my_stats = summary.pop("my_stats")
+        my_team_stats = summary.pop("my_team_stats")
+        other_team_stats = summary.pop("other_team_stats")[0]
+
+        # Flatten dictionaries
+        my_stats_keys = [
+            "weapon",
+            "paint",
+            "elimination",
+            "kill",
+            "death",
+            "special",
+            "assist",
+        ]
+        summary.update({k: my_stats[k] for k in my_stats_keys})
+        summary.update(
+            {f"my_team_{k}s": my_team_stats[k] for k in my_team_stats}
+        )
+        summary.update(
+            {f"other_team_{k}s": other_team_stats[k] for k in other_team_stats}
+        )
+        # Flatten Awards
+        awards = summary.pop("awards")
+        for i, award in enumerate(awards):
+            summary[f"award_{i + 1}"] = award[0]
+            summary[f"award_{i + 1}_rank"] = award[1]
+
+        return summary
 
 
 class battleSchema(JSONDataClass):
@@ -395,3 +462,33 @@ class battleSchema(JSONDataClass):
         elif isinstance(key, slice):
             return battleSchema(self.data[key])
         return self.data[key]
+
+    def __getattr__(self, key: str) -> Any:
+        """If the attribute exists, act normally. Otherwise, assume the
+        attribute exists in battleNodeSchema data and return a function that
+        returns that attribute for each node.
+
+        Args:
+            key (str): Attribute name
+
+        Returns:
+            Any: If the attribute exists, return the attribute. Otherwise,
+            return a function that returns the attribute for each node.
+        """
+        try:
+            return super().__getattr__(key)
+        except AttributeError:
+            pass
+
+        def attr_func(*args, **kwargs) -> list[Any]:
+            return [getattr(node, key)(*args, **kwargs) for node in self.data]
+
+        return attr_func
+
+    def to_pandas(self) -> pd.DataFrame:
+        """Convert the battleSchema to a pandas DataFrame.
+
+        Returns:
+            pd.DataFrame: A DataFrame of the match's stats.
+        """
+        return pd.DataFrame(self.match_summary())
