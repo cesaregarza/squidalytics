@@ -165,15 +165,20 @@ class playerFullSchema(playerSchema):
     weapon: weaponSchema
     result: resultSchema = None
 
+    @property
+    def full_name(self) -> str:
+        return self.name + "#" + self.nameId
+
     def summary(self) -> dict:
         out = {
-            "name": self.name + "#" + self.nameId,
+            "name": self.full_name,
             "abilities": self.calculate_abilities(),
             "weapon": self.weapon.name,
             "weapon_id": self.weapon.id,
             "species": self.species,
             "paint": self.paint,
-            "kill": self.result.kill,
+            "elimination": self.result.kill,
+            "kill": self.result.kill - self.result.assist,
             "death": self.result.death,
             "special": self.result.special,
             "assist": self.result.assist,
@@ -213,17 +218,59 @@ class teamSchema(JSONDataClass):
             else self.result.paintRatio
         )
 
-    def summary(self) -> tuple[dict, dict]:
-        team_summaries = [player.summary() for player in self.players]
+    def player_summary(self, detailed: bool = False) -> dict:
+        """Get a summary of the team's players.
+
+        Args:
+            detailed (bool, optional): Whether to include detailed information
+                about the player. Defaults to False.
+
+        Returns:
+            dict: A dictionary of player summaries.
+        """
+        out = []
+        for player in self.players:
+            out.append(player.summary())
+        if not detailed:
+            return out
+        # Add additional information if detailed is True.
+        team_stats = self.team_summary(player_summaries=out)
+        for player in out:
+
+            def ratio(key: str) -> float:
+                return player[key] / team_stats[key]
+
+            player["kill_ratio"] = ratio("kill")
+            player["death_ratio"] = ratio("death")
+            player["special_ratio"] = ratio("special")
+            player["assist_ratio"] = ratio("assist")
+            player["paint_ratio"] = ratio("paint")
+            player["kdr"] = player["kill"] / player["death"]
+        return out
+
+    def team_summary(self, player_summaries: list[dict] | None = None) -> dict:
+        """Get an overall summary of the team.
+
+        Args:
+            player_summaries (list[dict], optional): A list of player summaries
+                to use. If None, the player summaries will be calculated.
+                Passing in a list of player summaries reduces redundant work.
+                Defaults to None.
+
+        Returns:
+            dict: A dictionary of team statistics.
+        """
+        if player_summaries is None:
+            player_summaries = [player.summary() for player in self.players]
         team_total = {
-            "kills": sum(player["kill"] for player in team_summaries),
-            "deaths": sum(player["death"] for player in team_summaries),
-            "specials": sum(player["special"] for player in team_summaries),
-            "assists": sum(player["assist"] for player in team_summaries),
-            "paint": sum(player["paint"] for player in team_summaries),
+            "kill": sum(player["kill"] for player in player_summaries),
+            "death": sum(player["death"] for player in player_summaries),
+            "special": sum(player["special"] for player in player_summaries),
+            "assist": sum(player["assist"] for player in player_summaries),
+            "paint": sum(player["paint"] for player in player_summaries),
             "result": self.score,
         }
-        return team_summaries, team_total
+        return team_total
 
 
 @dataclass(repr=False)
