@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from squidalytics.constants import ABILITIES, ALL_ABILITIES, PRIMARY_ONLY
 from squidalytics.schemas.base import JSONDataClass
 from squidalytics.schemas.general import (
     colorSchema,
@@ -9,11 +10,6 @@ from squidalytics.schemas.general import (
     vsRuleSchema,
     vsStageSchema,
     weaponSchema,
-)
-from squidalytics.constants import (
-    PRIMARY_ONLY,
-    ABILITIES,
-    ALL_ABILITIES,
 )
 
 
@@ -89,7 +85,7 @@ class gearSchema(JSONDataClass):
                 continue
             abilities[ability.name] += 3
         return abilities
-    
+
     def classify_gear(self) -> str:
         """Classify the gear based on the abilities it has.
 
@@ -101,16 +97,16 @@ class gearSchema(JSONDataClass):
         # Primary adds 10, secondary adds 3. 19 points is thus perfect gear.
         if any(abilities[ability] == 19 for ability in ABILITIES):
             return "perfect"
-        
+
         # If the sum of all abilities is less than 19, it hasn't unlocked
         # all of the sub-abilities.
         if sum(abilities[ability] for ability in ABILITIES) < 19:
             return "incomplete"
-        
+
         # The only way to get 9 points is to have 3 of the same sub-ability.
         if any(abilities[ability] == 9 for ability in ABILITIES):
             return "complete"
-        
+
         # Otherwise, it's a mixed gear.
         return "mixed"
 
@@ -146,6 +142,17 @@ class playerSchema(JSONDataClass):
             gear_abilities = gear.calculate_abilities()
             for ability, value in gear_abilities.items():
                 abilities[ability] += value
+        # Sort the abilities by their value, then by their name, and remove
+        # keys with a value of 0.
+        abilities = {
+            ability: value
+            for ability, value in sorted(
+                abilities.items(),
+                key=lambda item: (item[1], item[0]),
+                reverse=True,
+            )
+            if value > 0
+        }
         return abilities
 
 
@@ -158,6 +165,21 @@ class playerFullSchema(playerSchema):
     weapon: weaponSchema
     result: resultSchema = None
 
+    def summary(self) -> dict:
+        out = {
+            "name": self.name + "#" + self.nameId,
+            "abilities": self.calculate_abilities(),
+            "weapon": self.weapon.name,
+            "weapon_id": self.weapon.id,
+            "species": self.species,
+            "paint": self.paint,
+            "kill": self.result.kill,
+            "death": self.result.death,
+            "special": self.result.special,
+            "assist": self.result.assist,
+        }
+        return out
+
 
 @dataclass(repr=False)
 class teamSchema(JSONDataClass):
@@ -168,6 +190,40 @@ class teamSchema(JSONDataClass):
     result: resultSchema = None
     tricolorRole: str = None
     festTeamName: str = None
+
+    @property
+    def is_my_team(self) -> bool:
+        """Check if the team is the team the user is on.
+
+        Returns:
+            bool: True if the team is the user's team, False otherwise.
+        """
+        return any(player.isMyself for player in self.players)
+
+    @property
+    def score(self) -> int:
+        """Get the team's score.
+
+        Returns:
+            int: The team's score.
+        """
+        return (
+            self.result.score
+            if self.result.score is not None
+            else self.result.paintRatio
+        )
+
+    def summary(self) -> tuple[dict, dict]:
+        team_summaries = [player.summary() for player in self.players]
+        team_total = {
+            "kills": sum(player["kill"] for player in team_summaries),
+            "deaths": sum(player["death"] for player in team_summaries),
+            "specials": sum(player["special"] for player in team_summaries),
+            "assists": sum(player["assist"] for player in team_summaries),
+            "paint": sum(player["paint"] for player in team_summaries),
+            "result": self.score,
+        }
+        return team_summaries, team_total
 
 
 @dataclass(repr=False)
@@ -203,6 +259,18 @@ class vsHistoryDetailSchema(JSONDataClass):
     leagueMatch: str = None
     nextHistoryDetail: idSchema = None
     previousHistoryDetail: idSchema = None
+
+    def count_awards(self) -> dict[str, int]:
+        """Count the number of times each award was received.
+
+        Returns:
+            dict[str, int]: A dictionary of award names and their count
+        """
+        awards = {}
+        for award in self.awards:
+            key = f"{award.name}:{award.rank}"
+            awards[key] = awards.get(key, 0) + 1
+        return awards
 
 
 @dataclass(repr=False)

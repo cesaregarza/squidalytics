@@ -182,3 +182,11 @@ class JSONDataClass:
                     item.traverse_tree(func)
             else:
                 func(self)
+
+    def top_level_keys(self) -> list[str]:
+        """Get the top level keys of the object tree.
+
+        Returns:
+            list[str]: The top level keys of the object tree.
+        """
+        return list(self.__dict__.keys())

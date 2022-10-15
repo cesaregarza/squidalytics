@@ -59,6 +59,10 @@ class colorSchema(JSONDataClass):
             out += f"{a:02x}"
         return out
 
+    # TODO: Fun challenge: Find a way to assign a "nearest" color name to the
+    #       color. Not at all necessary and may even make it harder to use,
+    #       but it would be cool.
+
 
 @dataclass(repr=False)
 class maskingImageSchema(JSONDataClass):
