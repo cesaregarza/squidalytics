@@ -1,10 +1,7 @@
 from dataclasses import dataclass
 
 from squidalytics.schemas.base import JSONDataClass
-from squidalytics.schemas.general import (
-    idSchema,
-    imageSchema,
-)
+from squidalytics.schemas.general import idSchema, imageSchema
 from squidalytics.schemas.overview.history_groups_only_first import (
     historyGroupsOnlyFirstSchema,
 )

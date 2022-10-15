@@ -137,7 +137,17 @@ class playerSchema(JSONDataClass):
     shoesGear: gearSchema
     paint: int
 
+    @property
+    def full_name(self) -> str:
+        return self.name + "#" + self.nameId
+
     def calculate_abilities(self) -> dict[str, int]:
+        """Calculate the total ability points for all gear.
+
+        Returns:
+            dict[str, int]: A dictionary of ability names and their total,
+                sorted by total points and dropping abilities with 0 points.
+        """
         abilities = {ability: 0 for ability in ALL_ABILITIES}
         for gear in [self.headGear, self.clothingGear, self.shoesGear]:
             gear_abilities = gear.calculate_abilities()
@@ -166,11 +176,12 @@ class playerFullSchema(playerSchema):
     weapon: weaponSchema
     result: resultSchema = None
 
-    @property
-    def full_name(self) -> str:
-        return self.name + "#" + self.nameId
-
     def summary(self) -> dict:
+        """Return a summary of the player's battle stats.
+
+        Returns:
+            dict: A dictionary of the player's stats.
+        """
         out = {
             "name": self.full_name,
             "abilities": self.calculate_abilities(),
@@ -314,11 +325,47 @@ class vsHistoryDetailSchema(JSONDataClass):
         Returns:
             dict[str, int]: A dictionary of award names and their count
         """
-        awards = {}
-        for award in self.awards:
-            key = f"{award.name}:{award.rank}"
-            awards[key] = awards.get(key, 0) + 1
-        return awards
+        return [(award.name, award.rank) for award in self.awards]
+
+    def my_stats(self, detailed: bool = False) -> dict:
+        """Get the stats for the user's team.
+
+        Args:
+            detailed (bool, optional): Whether to include detailed information
+                about the player. Defaults to False.
+
+        Returns:
+            dict: A dictionary of the user's team's stats.
+        """
+        players_summary = self.myTeam.player_summary(detailed=detailed)
+        for player in players_summary:
+            if player["name"] == self.player.full_name:
+                return player
+        raise ValueError("Could not find user's stats.")
+
+    def summary(self) -> dict:
+        """Get a summary of the match.
+
+        Returns:
+            dict: A dictionary of the match's stats.
+        """
+        out = {
+            "me": self.player.full_name,
+            "rule": self.vsRule.name,
+            "mode": self.vsMode.mode,
+            "stage": self.vsStage.name,
+            "judgement": self.judgement,
+            "knockout": self.knockout,
+            "duration": self.duration,
+            "played_time": self.playedTime,
+            "my_stats": self.my_stats(),
+            "my_team": self.myTeam.player_summary(True),
+            "other_teams": [
+                team.player_summary(True) for team in self.otherTeams
+            ],
+            "awards": self.count_awards(),
+        }
+        return out
 
 
 @dataclass(repr=False)
