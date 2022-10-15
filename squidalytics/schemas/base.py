@@ -6,6 +6,16 @@ class SecondaryException(Exception):
 
 
 class JSONDataClass:
+    """Base class for all dataclasses. This class provides the following
+    functionality:
+    - Recursively initialize dataclasses from dictionaries.
+    - Print the object tree in a human readable format.
+    - Enable numpy style indexing, e.g. obj["key1", "key2"].
+    - Index all the ids in the object tree.
+    - Get the top level keys of the object tree.
+    - Provide a method to apply a function to all the objects in the object.
+    """
+
     def __post_init__(self) -> None:
         """After initializing the dataclass, check if any of the fields are
         dictionaries. If so, initialize the corresponding annotation with the
@@ -23,7 +33,6 @@ class JSONDataClass:
                 if isinstance(value, dict):
                     annotations = self.get_annotations()
                     cls = annotations[key]
-                    # print(f"cls: {cls.__name__}, key: {key}")
                     # This is a hack to get around the fact that there is a key
                     # in the JSON that has a double underscore prefix. Since
                     # double underscore triggers name mangling,
@@ -46,11 +55,6 @@ class JSONDataClass:
                     except AttributeError:
                         setattr(self, key, [])
                         continue
-                    # print(
-                    #     f"super_cls: {super_cls.__name__}, "
-                    #     + f"cls: {cls.__name__}, "
-                    #     + f"key: {key}"
-                    # )
                     # Replace double underscores with single underscores for
                     # the same reason as above.
                     attrset = [
