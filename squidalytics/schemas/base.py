@@ -1,4 +1,4 @@
-from typing import Any, Callable, cast
+from typing import Any, Callable, cast, TypeVar, Type
 
 
 class SecondaryException(Exception):
@@ -72,7 +72,7 @@ class JSONDataClass:
                     raise e
 
     @classmethod
-    def get_annotations(cls) -> dict[str, type]:
+    def get_annotations(cls) -> dict[str, Type[Any]]:
         """Get the annotations of the class, but also include the annotations
         of any ancestor classes.
 
@@ -80,7 +80,7 @@ class JSONDataClass:
             dict[str, type]: A dictionary of the annotations of the class and
                 the annotations of any ancestor classes.
         """
-        annotations = {}
+        annotations: dict[str, Any] = {}
         for c in cls.mro():
             try:
                 annotations.update(**c.__annotations__)
@@ -116,7 +116,7 @@ class JSONDataClass:
                 out += tabs + f"{key}: {type(value).__name__}\n"
         return out
 
-    def __getitem__(self, key: str | tuple[str | int]) -> Any:
+    def __getitem__(self, key: str | int | slice | tuple[str | int, ...]) -> Any:
         """Get the value of the given key. If the key is a tuple, then enable
         numpy style indexing.
 
@@ -128,6 +128,14 @@ class JSONDataClass:
         """
         if isinstance(key, str):
             return getattr(self, key)
+        elif isinstance(key, (int, slice)):
+            top_level_keys = self.top_level_keys()
+            if len(top_level_keys) > 1:
+                raise IndexError(
+                    "Cannot index with an integer or slice if there are "
+                    "multiple top level keys."
+                )
+            return getattr(self, top_level_keys[0])[key]
 
         # If the key is a tuple, recursively call __getitem__ on the
         # corresponding attribute.
@@ -144,7 +152,7 @@ class JSONDataClass:
         Returns:
             dict[str, Any]: A dictionary of all the ids in the object tree.
         """
-        id_index = {}
+        id_index: dict[str, Any] = {}
         for key, value in self.__dict__.items():
             if isinstance(value, JSONDataClass):
                 id_index.update(**value.__index_ids())

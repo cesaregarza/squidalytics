@@ -245,7 +245,7 @@ class teamSchema(JSONDataClass):
         else:
             return 0
 
-    def player_summary(self, detailed: bool = False) -> dict:
+    def player_summary(self, detailed: bool = False) -> list[dict[str, Any]]:
         """Get a summary of the team's players.
 
         Args:
@@ -253,9 +253,9 @@ class teamSchema(JSONDataClass):
                 about the player. Defaults to False.
 
         Returns:
-            dict: A dictionary of player summaries.
+            list[dict]: A list of dictionaries containing the player's stats.
         """
-        out = []
+        out: list[dict[str, Any]] = []
         for player in self.players:
             out.append(player.summary())
         if not detailed:
@@ -446,7 +446,7 @@ class battleNodeSchema(JSONDataClass):
 
 
 class battleSchema(JSONDataClass):
-    def __init__(self, json: list[dict]) -> None:
+    def __init__(self, json: list[dict] | list[battleNodeSchema]) -> None:
         try:
             self.data = [battleNodeSchema(**result) for result in json]
         except TypeError as e:
@@ -454,13 +454,15 @@ class battleSchema(JSONDataClass):
                 raise e
             self.data = json
 
-    def __getitem__(self, key: int | slice | tuple[str | int]) -> Any:
+    def __getitem__(self, key: int | slice | str | tuple[str | int, ...]) -> Any:
         if isinstance(key, tuple):
             first_index = key[0]
             other_index = key[1:]
             return self.data[first_index][other_index]
         elif isinstance(key, slice):
             return battleSchema(self.data[key])
+        elif isinstance(key, str):
+            raise TypeError("Cannot index by string.")
         return self.data[key]
 
     def __getattr__(self, key: str) -> Any:

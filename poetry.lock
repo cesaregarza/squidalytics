@@ -671,6 +671,25 @@ python-versions = ">=3.7"
 test = ["pre-commit", "pytest"]
 
 [[package]]
+name = "types-requests"
+version = "2.28.11.2"
+description = "Typing stubs for requests"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+types-urllib3 = "<1.27"
+
+[[package]]
+name = "types-urllib3"
+version = "1.26.25"
+description = "Typing stubs for urllib3"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -702,7 +721,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "9f33bef4d852c8453691737bf20735191c522a473694e6949dcec844ae2cbd99"
+content-hash = "cbe1f1556a9587fb9d80e97cc7308c1debfc3ce7af38fd75ccc5eaa28da48b94"
 
 [metadata.files]
 appnope = [
@@ -1231,6 +1250,14 @@ tornado = [
 traitlets = [
     {file = "traitlets-5.4.0-py3-none-any.whl", hash = "sha256:93663cc8236093d48150e2af5e2ed30fc7904a11a6195e21bab0408af4e6d6c8"},
     {file = "traitlets-5.4.0.tar.gz", hash = "sha256:3f2c4e435e271592fe4390f1746ea56836e3a080f84e7833f0f801d9613fec39"},
+]
+types-requests = [
+    {file = "types-requests-2.28.11.2.tar.gz", hash = "sha256:fdcd7bd148139fb8eef72cf4a41ac7273872cad9e6ada14b11ff5dfdeee60ed3"},
+    {file = "types_requests-2.28.11.2-py3-none-any.whl", hash = "sha256:14941f8023a80b16441b3b46caffcbfce5265fd14555844d6029697824b5a2ef"},
+]
+types-urllib3 = [
+    {file = "types-urllib3-1.26.25.tar.gz", hash = "sha256:5aef0e663724eef924afa8b320b62ffef2c1736c1fa6caecfc9bc6c8ae2c3def"},
+    {file = "types_urllib3-1.26.25-py3-none-any.whl", hash = "sha256:c1d78cef7bd581e162e46c20a57b2e1aa6ebecdcf01fd0713bb90978ff3e3427"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.4.0-py3-none-any.whl", hash = "sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e"},
