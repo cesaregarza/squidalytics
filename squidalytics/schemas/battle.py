@@ -241,7 +241,7 @@ class teamSchema(JSONDataClass):
         if self.result and self.result.score:
             return self.result.score
         elif self.result and self.result.paintRatio:
-            return self.result.paintRatio
+            return self.result.paintRatio * 100
         else:
             return 0
 
@@ -493,7 +493,7 @@ class battleSchema(JSONDataClass):
             return a function that returns the attribute for each node.
         """
         try:
-            return getattr(self, key)
+            return super().__getattr__(key)
         except AttributeError:
             pass
 
@@ -508,4 +508,8 @@ class battleSchema(JSONDataClass):
         Returns:
             pd.DataFrame: A DataFrame of the match's stats.
         """
-        return pd.DataFrame(self.match_summary())
+        df = pd.DataFrame(self.match_summary())
+        df["played_time"] = pd.to_datetime(df["played_time"])
+        df["duration"] = pd.to_timedelta(df["duration"], "s")
+        df["end_time"] = df["played_time"] + df["duration"]
+        return df
