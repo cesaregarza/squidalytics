@@ -3,7 +3,7 @@ from typing import Any
 
 import pandas as pd
 
-from squidalytics.constants import ABILITIES, ALL_ABILITIES, PRIMARY_ONLY
+from squidalytics.constants import ABILITIES, ALL_ABILITIES
 from squidalytics.schemas.base import JSONDataClass
 from squidalytics.schemas.general import (
     colorSchema,
@@ -249,8 +249,8 @@ class teamSchema(JSONDataClass):
         """Get a summary of the team's players.
 
         Args:
-            detailed (bool, optional): Whether to include detailed information
-                about the player. Defaults to False.
+            detailed (bool): Whether to include detailed information about the
+                player. Defaults to False.
 
         Returns:
             list[dict]: A list of dictionaries containing the player's stats.
@@ -262,17 +262,19 @@ class teamSchema(JSONDataClass):
             return out
         # Add additional information if detailed is True.
         team_stats = self.team_summary(player_summaries=out)
-        for player in out:
+        for player_dict in out:
 
             def ratio(key: str) -> float:
-                return player[key] / max(team_stats[key], 1)
+                return player_dict[key] / max(team_stats[key], 1)
 
-            player["kill_ratio"] = ratio("kill")
-            player["death_ratio"] = ratio("death")
-            player["special_ratio"] = ratio("special")
-            player["assist_ratio"] = ratio("assist")
-            player["paint_ratio"] = ratio("paint")
-            player["kdr"] = player["kill"] / max(player["death"], 1)
+            player_dict["kill_ratio"] = ratio("kill")
+            player_dict["death_ratio"] = ratio("death")
+            player_dict["special_ratio"] = ratio("special")
+            player_dict["assist_ratio"] = ratio("assist")
+            player_dict["paint_ratio"] = ratio("paint")
+            player_dict["kdr"] = player_dict["kill"] / max(
+                player_dict["death"], 1
+            )
         return out
 
     def team_summary(self, player_summaries: list[dict] | None = None) -> dict:
@@ -334,11 +336,14 @@ class vsHistoryDetailSchema(JSONDataClass):
     nextHistoryDetail: idSchema = None
     previousHistoryDetail: idSchema = None
 
-    def count_awards(self) -> dict[str, int]:
+    def count_awards(self) -> list[tuple[str, str]]:
         """Count the number of times each award was received.
 
         Returns:
-            dict[str, int]: A dictionary of award names and their count
+            list:
+                tuple:
+                    str: The name of the award.
+                    str: The rank of the award.
         """
         return [(award.name, award.rank) for award in self.awards]
 
@@ -346,8 +351,11 @@ class vsHistoryDetailSchema(JSONDataClass):
         """Get the stats for the user's team.
 
         Args:
-            detailed (bool, optional): Whether to include detailed information
-                about the player. Defaults to False.
+            detailed (bool): Whether to include detailed information about the
+                player. Defaults to False.
+
+        Raises:
+            ValueError: If the user's stats is not found.
 
         Returns:
             dict: A dictionary of the user's team's stats.
@@ -407,6 +415,9 @@ class battleNodeSchema(JSONDataClass):
     def match_summary(self) -> dict[str, int | float | str | None]:
         """Get a flat summary of the match, with no nested dictionaries.
 
+        Raises:
+            ValueError: If the match is a tricolor match.
+
         Returns:
             dict: A dictionary of the match's stats. No value is a dictionary.
         """
@@ -447,17 +458,21 @@ class battleNodeSchema(JSONDataClass):
 
 class battleSchema(JSONDataClass):
     def __init__(self, json: list[dict] | list[battleNodeSchema]) -> None:
-        try:
+        if len(json) > 0 and isinstance(json[0], dict):
             self.data = [battleNodeSchema(**result) for result in json]
-        except TypeError as e:
-            if not all(isinstance(result, battleNodeSchema) for result in json):
-                raise e
+        elif not all(isinstance(result, battleNodeSchema) for result in json):
+            raise TypeError("Invalid type for battleSchema.")
+        else:
             self.data = json
 
-    def __getitem__(self, key: int | slice | str | tuple[str | int, ...]) -> Any:
+    def __getitem__(
+        self, key: int | slice | str | tuple[str | int, ...]
+    ) -> Any:
         if isinstance(key, tuple):
             first_index = key[0]
             other_index = key[1:]
+            if isinstance(first_index, str):
+                raise TypeError("Cannot index by string.")
             return self.data[first_index][other_index]
         elif isinstance(key, slice):
             return battleSchema(self.data[key])
@@ -478,7 +493,7 @@ class battleSchema(JSONDataClass):
             return a function that returns the attribute for each node.
         """
         try:
-            return super().__getattr__(key)
+            return getattr(self, key)
         except AttributeError:
             pass
 

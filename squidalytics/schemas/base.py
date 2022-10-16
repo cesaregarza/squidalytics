@@ -1,4 +1,4 @@
-from typing import Any, Callable, cast, TypeVar, Type
+from typing import Any, Callable, Type, cast
 
 
 class SecondaryException(Exception):
@@ -24,7 +24,7 @@ class JSONDataClass:
         Raises:
             SecondaryException: If the key of the dictionary is not found in the
                 result of the get_annotations() method.
-            e: SecondaryExceptions get passed up the chain.
+            Exception: SecondaryExceptions get passed up the chain.
         """
         # This class should be used as a base class for all dataclasses
         for key, value in self.__dict__.items():
@@ -89,7 +89,14 @@ class JSONDataClass:
         return annotations
 
     def __repr__(self, level=1) -> str:
-        """Print the object tree in a human readable format."""
+        """Print the object tree in a human readable format.
+
+        Args:
+            level (int, optional): The level of the object tree. Defaults to 1.
+
+        Returns:
+            str: The object tree in a human readable format.
+        """
         out = self.__class__.__name__ + ":\n" if level == 1 else ""
         tabs = " " * level
 
@@ -109,19 +116,25 @@ class JSONDataClass:
                 # Assume all items in the list are of the same type
                 try:
                     out += value[idx].__repr__(level + 1)
-                except TypeError as e:
+                except TypeError:
                     # If list contains None, then the above will fail.
                     out += value[idx].__repr__() + "\n"
             else:
                 out += tabs + f"{key}: {type(value).__name__}\n"
         return out
 
-    def __getitem__(self, key: str | int | slice | tuple[str | int, ...]) -> Any:
+    def __getitem__(
+        self, key: str | int | slice | tuple[str | int, ...]
+    ) -> Any:
         """Get the value of the given key. If the key is a tuple, then enable
         numpy style indexing.
 
         Args:
             key (str | tuple[str  |  int]): The key to get the value of.
+
+        Raises:
+            IndexError: If the key is an integer or slice and there is more than
+                one item in the object tree.
 
         Returns:
             Any: The value of the given key.

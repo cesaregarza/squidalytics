@@ -44,8 +44,8 @@ class colorSchema(JSONDataClass):
         """Converts the color to a hex RGB string.
 
         Args:
-            include_alpha (bool, optional): Whether to include the alpha channel
-                in the output. Defaults to False.
+            include_alpha (bool): Whether to include the alpha channel in the
+                output. Defaults to False.
 
         Returns:
             str: The hex RGB string.
