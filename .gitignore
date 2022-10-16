@@ -148,4 +148,6 @@ test.ipynb
 test.py
 .vscode/settings.json
 input_files
+!tests/input_files
 *.json
+!tests/input_files/*.json
