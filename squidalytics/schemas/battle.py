@@ -4,7 +4,7 @@ from typing import Any
 import pandas as pd
 
 from squidalytics.constants import ABILITIES, ALL_ABILITIES
-from squidalytics.schemas.base import JSONDataClass
+from squidalytics.schemas.base import JSONDataClass, JSONDataClassListTopLevel
 from squidalytics.schemas.general import (
     colorSchema,
     idSchema,
@@ -456,51 +456,8 @@ class battleNodeSchema(JSONDataClass):
         return summary
 
 
-class battleSchema(JSONDataClass):
-    def __init__(self, json: list[dict] | list[battleNodeSchema]) -> None:
-        if len(json) > 0 and isinstance(json[0], dict):
-            self.data = [battleNodeSchema(**result) for result in json]
-        elif not all(isinstance(result, battleNodeSchema) for result in json):
-            raise TypeError("Invalid type for battleSchema.")
-        else:
-            self.data = json
-
-    def __getitem__(
-        self, key: int | slice | str | tuple[str | int, ...]
-    ) -> Any:
-        if isinstance(key, tuple):
-            first_index = key[0]
-            other_index = key[1:]
-            if isinstance(first_index, str):
-                raise TypeError("Cannot index by string.")
-            return self.data[first_index][other_index]
-        elif isinstance(key, slice):
-            return battleSchema(self.data[key])
-        elif isinstance(key, str):
-            raise TypeError("Cannot index by string.")
-        return self.data[key]
-
-    def __getattr__(self, key: str) -> Any:
-        """If the attribute exists, act normally. Otherwise, assume the
-        attribute exists in battleNodeSchema data and return a function that
-        returns that attribute for each node.
-
-        Args:
-            key (str): Attribute name
-
-        Returns:
-            Any: If the attribute exists, return the attribute. Otherwise,
-            return a function that returns the attribute for each node.
-        """
-        try:
-            return super().__getattr__(key)
-        except AttributeError:
-            pass
-
-        def attr_func(*args, **kwargs) -> list[Any]:
-            return [getattr(node, key)(*args, **kwargs) for node in self.data]
-
-        return attr_func
+class battleSchema(JSONDataClassListTopLevel):
+    next_level_type = battleNodeSchema
 
     def to_pandas(self) -> pd.DataFrame:
         """Convert the battleSchema to a pandas DataFrame.

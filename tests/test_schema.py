@@ -1,4 +1,5 @@
 from typing import Any
+
 import pytest
 
 from squidalytics.schemas.base import JSONDataClass
@@ -25,6 +26,11 @@ from squidalytics.schemas.battle import (
 from tests.fixtures.jsons import json_path
 
 base_path = (0, "data", "vsHistoryDetail")
+
+
+class TestJsonDataClass:
+    def test_init(self, test_json_dict: dict) -> None:
+        test = JSONDataClass(**test_json_dict)
 
 
 class TestAnarchySchema:
