@@ -26,6 +26,14 @@ def test_json_list() -> list[dict]:
     return test_json
 
 
+@pytest.fixture
+def test_json_list_with_id() -> list[dict]:
+    test_json_path = str(input_path / "test_json_with_id.json")
+    with open(test_json_path, "r") as f:
+        test_json = json.load(f)
+    return test_json
+
+
 @dataclass(repr=False)
 class Level3(JSONDataClass):
     c: int
@@ -53,21 +61,38 @@ class Level1(JSONDataClass):
 class Level0(JSONDataClassListTopLevel):
     next_level_type = Level1
 
+
 @dataclass(repr=False)
 class Level0DataClass(JSONDataClassListTopLevel):
     data: list[Level1]
 
 
-class AnnotationLevel0(JSONDataClass):
-    a: int
-
-
-class AnnotationLevel1(JSONDataClass):
-    b: int
-
-
-class AnnotationLevel2(JSONDataClass):
+@dataclass(repr=False)
+class Level3WithID(JSONDataClass):
     c: int
+    d: None
+    e: str
+    _g: None
+    h: list
+    i: list = None
+    id: int = None
+
+
+@dataclass(repr=False)
+class Level2WithID(JSONDataClass):
+    b: list[Level3WithID]
+    id: int = None
+
+
+@dataclass(repr=False)
+class Level1WithID(JSONDataClass):
+    a: Level2WithID
+    j: int = 1
+    id: int = None
+
+
+class Level0WithID(JSONDataClassListTopLevel):
+    next_level_type = Level1WithID
 
 
 @pytest.fixture
@@ -86,8 +111,8 @@ def level1_class() -> Level1:
 
 
 @pytest.fixture
-def annotation_level0_class() -> AnnotationLevel0:
-    return AnnotationLevel0
+def level1_with_id_class() -> Level1WithID:
+    return Level1WithID
 
 
 @pytest.fixture
@@ -98,3 +123,8 @@ def level0_loaded(test_json_list) -> Level0:
 @pytest.fixture
 def level1_loaded(test_json_dict) -> Level1:
     return Level1(**test_json_dict)
+
+
+@pytest.fixture
+def level0_loaded_with_id(test_json_list_with_id) -> Level0:
+    return Level0WithID(test_json_list_with_id)

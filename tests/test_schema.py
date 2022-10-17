@@ -97,11 +97,31 @@ class TestJsonDataClass:
             level1_loaded[0]
         with pytest.raises(IndexError):
             level1_loaded[:]
+        level2 = level1_loaded["a"]
+        level2_sliced = level2[:]
+        assert level2["b", 0, "c"] == 3
 
     def test_getattr_toplevel(self, level0_loaded) -> None:
         assert level0_loaded.test_attribute() == [1]
         with pytest.raises(AttributeError):
             level0_loaded.test_nonexistent_attribute()
+
+    def test_search_by_id(
+        self, level0_loaded_with_id, level1_with_id_class
+    ) -> None:
+        level1 = level0_loaded_with_id.search_by_id("0")
+        assert isinstance(level1, level1_with_id_class)
+        assert level1.id == 0
+
+        level1 = level0_loaded_with_id.search_by_id(0)
+        assert isinstance(level1, level1_with_id_class)
+        assert level1.id == 0
+
+    def test_traverse_tree(self, level0_loaded) -> None:
+        def stringify(node: Any) -> str:
+            return str(node)
+
+        level0_loaded.traverse_tree(stringify)
 
 
 class TestAnarchySchema:

@@ -173,26 +173,27 @@ class JSONDataClass:
                 id_index.update(**value.__index_ids())
             elif isinstance(value, list):
                 for item in value:
-                    item = cast(JSONDataClass, item)
-                    id_index.update(**item.__index_ids())
+                    if isinstance(item, JSONDataClass):
+                        id_index.update(**item.__index_ids())
             elif key == "id":
-                id_index[value] = self
+                id_index[str(value)] = self
         return id_index
 
-    def search_by_id(self, id: str) -> Any:
+    def search_by_id(self, id: int | str) -> Any:
         """Search the object tree for the object with the given id. Indexing is
         done on the first call to this method, and then the generated index is
         used for subsequent calls.
 
         Args:
-            id (str): The id of the object to search for.
+            id (str): The id of the object to search for. If fed an integer,
+                it will be converted to a string.
 
         Returns:
             Any: The object with the given id.
         """
         if getattr(self, "__id_index", None) is None:
             self.__id_index = self.__index_ids()
-        return self.__id_index[id]
+        return self.__id_index[str(id)]
 
     def traverse_tree(self, func: Callable[[Any], Any]) -> None:
         """Traverse the object tree and apply the given function to each object.
@@ -205,8 +206,8 @@ class JSONDataClass:
                 value.traverse_tree(func)
             elif isinstance(value, list):
                 for item in value:
-                    item = cast(JSONDataClass, item)
-                    item.traverse_tree(func)
+                    if isinstance(item, JSONDataClass):
+                        item.traverse_tree(func)
             else:
                 func(self)
 
@@ -308,6 +309,12 @@ class JSONDataClassListTopLevel(JSONDataClass):
             return super().__getattr__(key)
         except AttributeError:
             pass
+
+        if key == "__id_index":
+            if key in self.__dict__:
+                return self.__dict__[key]
+            else:
+                return None
 
         def attr_func(*args, **kwargs) -> list[Any]:
             return [getattr(node, key)(*args, **kwargs) for node in self.data]
