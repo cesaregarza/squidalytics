@@ -120,7 +120,7 @@ class JSONDataClass:
                     out += value[idx].__repr__(level + 1)
                 except TypeError:
                     # If list contains None, then the above will fail.
-                    out += value[idx].__repr__() + "\n"
+                    out += tabs + "  " + value[idx].__repr__() + "\n"
             else:
                 out += tabs + f"{key}: {type(value).__name__}\n"
         return out
@@ -227,6 +227,16 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
     next_level_type: Type[JSONDataClass] = JSONDataClass
 
+    def __new__(cls, *args, **kwargs):
+        """Override the __new__ method to ensure that making the class into a
+        dataclass is not allowed.
+        """
+        if is_dataclass(cls):
+            raise TypeError(
+                "JSONDataClassListTopLevel should not be used as a dataclass."
+            )
+        return super().__new__(cls)
+
     def __init__(self, json: list[dict] | list[Type[next_level_type]]) -> None:
         """Override the __init__ method to allow for the top level of the object
         tree to be a list.
@@ -240,7 +250,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
             TypeError: If the types of the items in the list are not all that of
                 the defined next level type.
         """
-        if len(json) > 0 and isinstance(json[0], dict):
+        if len(json) > 0 and all(isinstance(result, dict) for result in json):
             self.data = [self.next_level_type(**result) for result in json]
         elif not all(
             isinstance(result, self.next_level_type) for result in json
@@ -277,7 +287,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
                 raise TypeError("Cannot index top level by string")
             return self.data[first_index][other_index]
         elif isinstance(key, slice):
-            return self.next_level_type(self.data[key])
+            return JSONDataClassListTopLevel(self.data[key])
         elif isinstance(key, str):
             raise TypeError("Cannot index top level by string")
         return self.data[key]
