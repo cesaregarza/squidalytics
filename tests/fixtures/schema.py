@@ -30,6 +30,7 @@ class Level3:
     c: int
     d: None
     e: str
+    _g: None
 
 
 @dataclass(repr=False)
@@ -47,6 +48,12 @@ class Level0(JSONDataClass):
     data: list[Level1]
 
 
+class Level0NonDataClass(JSONDataClass):
+    def __init__(self, data: list[Level1]):
+        self.data = data
+        self.__dummy = None
+
+
 class AnnotationLevel0(JSONDataClass):
     a: int
 
@@ -62,6 +69,16 @@ class AnnotationLevel2(JSONDataClass):
 @pytest.fixture
 def level0_class() -> Level0:
     return Level0
+
+
+@pytest.fixture
+def level0_non_dataclass() -> Level0NonDataClass:
+    return Level0NonDataClass
+
+
+@pytest.fixture
+def level1_class() -> Level1:
+    return Level1
 
 
 @pytest.fixture

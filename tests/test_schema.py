@@ -1,8 +1,9 @@
+from dataclasses import is_dataclass
 from typing import Any
 
 import pytest
 
-from squidalytics.schemas.base import JSONDataClass
+from squidalytics.schemas.base import JSONDataClass, SecondaryException
 from squidalytics.schemas.battle import (
     awardsSchema,
     backgroundSchema,
@@ -29,8 +30,11 @@ base_path = (0, "data", "vsHistoryDetail")
 
 
 class TestJsonDataClass:
-    def test_init(self, test_json_dict: dict) -> None:
-        test = JSONDataClass(**test_json_dict)
+    def test_init(self, test_json_dict, level1_class) -> None:
+        with pytest.raises(TypeError):
+            test = JSONDataClass(**test_json_dict)
+        test = level1_class(**test_json_dict)
+        assert isinstance(test, JSONDataClass)
 
 
 class TestAnarchySchema:

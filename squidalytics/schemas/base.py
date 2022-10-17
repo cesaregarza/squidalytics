@@ -28,8 +28,6 @@ class JSONDataClass:
                 result of the get_annotations() method.
             Exception: SecondaryExceptions get passed up the chain.
         """
-        if not is_dataclass(self):
-            raise TypeError("JSONDataClass can only be used with dataclasses.")
         # This class should be used as a base class for all dataclasses
         for key, value in self.__dict__.items():
 
