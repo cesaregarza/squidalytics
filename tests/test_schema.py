@@ -138,12 +138,32 @@ class TestAnarchySchema:
     def test_getattr(
         self,
         anarchy_full_json: dict,
-        anarchy_battle_schema: battleSchema,
+        anarchy_loaded: battleSchema,
         path: tuple,
         expected: Any,
     ) -> None:
         """Test that the schema can get correct attributes from the JSON."""
         true_path = base_path + path
         test_json = json_path(anarchy_full_json, true_path)
-        assert anarchy_battle_schema[true_path] == test_json
-        assert anarchy_battle_schema[true_path] == expected
+        assert anarchy_loaded[true_path] == test_json
+        assert anarchy_loaded[true_path] == expected
+
+    def test_rgb(self, anarchy_loaded: battleSchema) -> None:
+        path = base_path + ("player", "nameplate", "background", "textColor")
+        assert anarchy_loaded[path].to_hex_rgb() == "#ffffff"
+        assert (
+            anarchy_loaded[path].to_hex_rgb(include_alpha=True) == "#ffffffff"
+        )
+
+    def test_calculate_ability(self, anarchy_loaded: battleSchema) -> None:
+        path = base_path + ("player",)
+        abilities = anarchy_loaded[path].calculate_abilities()
+        assert abilities == {
+            "Ink Recovery Up": 33,
+            "Intensify Action": 6,
+            "Ink Saver (Main)": 3,
+            "Run Speed Up": 3,
+            "Special Saver": 3,
+            "Sub Power Up": 3,
+            "Swim Speed Up": 3,
+        }

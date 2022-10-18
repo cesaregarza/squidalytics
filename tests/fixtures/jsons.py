@@ -36,5 +36,5 @@ def anarchy_full_json() -> dict:
 
 
 @pytest.fixture
-def anarchy_battle_schema(anarchy_full_json: dict) -> battleSchema:
+def anarchy_loaded(anarchy_full_json: dict) -> battleSchema:
     return battleSchema(anarchy_full_json)

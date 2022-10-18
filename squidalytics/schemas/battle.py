@@ -410,7 +410,7 @@ class battleNodeSchema(JSONDataClass):
         Returns:
             bool: True if the match is completed, False otherwise.
         """
-        return self.data.vsHistoryDetail.judgement == "COMPLETE"
+        return self.data.vsHistoryDetail.judgement != "EXEMPTED_LOSE"
 
     def match_summary(self) -> dict[str, int | float | str | None]:
         """Get a flat summary of the match, with no nested dictionaries.
