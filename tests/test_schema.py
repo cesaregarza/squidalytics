@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 
+from squidalytics.constants import ALL_ABILITIES
 from squidalytics.schemas.base import JSONDataClass, SecondaryException
 from squidalytics.schemas.battle import (
     awardsSchema,
@@ -125,6 +126,18 @@ class TestJsonDataClass:
 
 
 class TestAnarchySchema:
+
+    joy_abilities = {
+        "Ink Recovery Up": 33,
+        "Intensify Action": 6,
+        "Ink Saver (Main)": 3,
+        "Run Speed Up": 3,
+        "Special Saver": 3,
+        "Sub Power Up": 3,
+        "Swim Speed Up": 3,
+    }
+    joy_full_name = "Joy#1584"
+
     @pytest.mark.parametrize(
         "path, expected",
         [
@@ -155,15 +168,21 @@ class TestAnarchySchema:
             anarchy_loaded[path].to_hex_rgb(include_alpha=True) == "#ffffffff"
         )
 
-    def test_calculate_ability(self, anarchy_loaded: battleSchema) -> None:
+    def test_calculate_ability_solo(self, anarchy_loaded: battleSchema) -> None:
+        path = base_path + ("player", "headGear")
+        abilities = anarchy_loaded[path].calculate_abilities()
+        expected_abilities = {k: 0 for k in ALL_ABILITIES}
+        expected_abilities["Ink Recovery Up"] = 10
+        expected_abilities["Ink Saver (Main)"] = 3
+        expected_abilities["Run Speed Up"] = 3
+        expected_abilities["Special Saver"] = 3
+        assert abilities == expected_abilities
+
+    def test_calculate_ability_all(self, anarchy_loaded: battleSchema) -> None:
         path = base_path + ("player",)
         abilities = anarchy_loaded[path].calculate_abilities()
-        assert abilities == {
-            "Ink Recovery Up": 33,
-            "Intensify Action": 6,
-            "Ink Saver (Main)": 3,
-            "Run Speed Up": 3,
-            "Special Saver": 3,
-            "Sub Power Up": 3,
-            "Swim Speed Up": 3,
-        }
+        assert abilities == self.joy_abilities
+    
+    def test_full_name(self, anarchy_loaded: battleSchema) -> None:
+        path = base_path + ("player", )
+        assert anarchy_loaded[path].full_name == self.joy_full_name
