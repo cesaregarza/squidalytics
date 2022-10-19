@@ -196,21 +196,34 @@ class JSONDataClass:
             self.__id_index = self.__index_ids()
         return self.__id_index[str(id)]
 
-    def traverse_tree(self, func: Callable[[Any], Any]) -> None:
+    def traverse_tree(
+        self, func: Callable[[Any], Any], prune_none: bool = False
+    ) -> None:
         """Traverse the object tree and apply the given function to each object.
 
         Args:
             func (Callable[[Any], Any]): The function to apply to each object.
+            prune_none (bool, optional): If True, then prune the branches where
+                the function returns None. Defaults to False.
         """
+        out = {}
         for key, value in self.__dict__.items():
             if isinstance(value, JSONDataClass):
-                value.traverse_tree(func)
+                out[key] = value.traverse_tree(func, prune_none)
             elif isinstance(value, list):
+                li = []
                 for item in value:
                     if isinstance(item, JSONDataClass):
-                        item.traverse_tree(func)
+                        li.append(item.traverse_tree(func, prune_none))
+                    else:
+                        val = func(item)
+                        li.append(val)
+                out[key.replace("_", "__")] = li
             else:
-                func(self)
+                val = func(value)
+                if not prune_none or val is not None:
+                    out[key.replace("_", "__")] = val
+        return out
 
     def top_level_keys(self) -> list[str]:
         """Get the top level keys of the object tree.
@@ -221,7 +234,8 @@ class JSONDataClass:
         return list(self.__dict__.keys())
 
     def to_dict(self, drop_nones: bool = True) -> dict[str, Any]:
-        """Convert the object tree to a dictionary.
+        """Convert the object tree to a dictionary. Syntactic sugar for the
+        traverse_tree method with the function set to return the object.
 
         Args:
             drop_nones (bool, optional): If True, then any keys with a value of
@@ -230,23 +244,7 @@ class JSONDataClass:
         Returns:
             dict[str, Any]: The object tree as a dictionary.
         """
-        out = {}
-        for key, value in self.__dict__.items():
-            if isinstance(value, JSONDataClass):
-                out[key] = value.to_dict(drop_nones=drop_nones)
-            elif isinstance(value, list):
-                li = []
-                for item in value:
-                    if isinstance(item, JSONDataClass):
-                        li.append(item.to_dict(drop_nones=drop_nones))
-                    else:
-                        li.append(item)
-                out[key] = li
-            else:
-                if drop_nones and value is None:
-                    continue
-                out[key.replace("_", "__")] = value
-        return out
+        return self.traverse_tree(lambda x: x, drop_nones)
 
     def load(self, filename: str) -> None:
         """Load the object tree from a JSON file.
@@ -368,3 +366,22 @@ class JSONDataClassListTopLevel(JSONDataClass):
             return [getattr(node, key)(*args, **kwargs) for node in self.data]
 
         return attr_func
+
+    def traverse_tree(
+        self, func: Callable[[Any], Any], prune_none: bool = False
+    ) -> None:
+        pre_return = super().traverse_tree(func, prune_none)
+        return pre_return["data"]
+
+    def to_dict(self, drop_nones: bool = True) -> list[dict]:
+        """Convert the object tree to a dictionary. Syntactic sugar for the
+        traverse_tree method with the function set to return the object.
+
+        Args:
+            drop_nones (bool, optional): If True, then any keys with a value of
+                None will be dropped. Defaults to True.
+
+        Returns:
+            dict[str, Any]: The object tree as a dictionary.
+        """
+        return self.traverse_tree(lambda x: x, drop_nones)
