@@ -196,12 +196,15 @@ class JSONDataClass:
         return self.__id_index[str(id)]
 
     def traverse_tree(
-        self, func: Callable[[Any], Any], prune_none: bool = False
+        self, func: Callable[[Any, str], Any], prune_none: bool = False
     ) -> None:
         """Traverse the object tree and apply the given function to each object.
 
         Args:
             func (Callable[[Any], Any]): The function to apply to each object.
+                First attempts to call the function with the object and the key
+                as arguments. If this fails, then it will call the function on
+                just the object.
             prune_none (bool, optional): If True, then prune the branches where
                 the function returns None. Defaults to False.
         """
@@ -215,11 +218,17 @@ class JSONDataClass:
                     if isinstance(item, JSONDataClass):
                         li.append(item.traverse_tree(func, prune_none))
                     else:
-                        val = func(item)
+                        try:
+                            val = func(item, key)
+                        except TypeError:
+                            val = func(item)
                         li.append(val)
                 out[key.replace("_", "__")] = li
             else:
-                val = func(value)
+                try:
+                    val = func(value, key)
+                except TypeError:
+                    val = func(value)
                 if not prune_none or val is not None:
                     out[key.replace("_", "__")] = val
         return out
