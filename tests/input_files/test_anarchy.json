@@ -1758,7 +1758,7 @@
                                     },
                                     "__isGear": "HeadGear",
                                     "primaryGearPower": {
-                                        "name": "Swim Speed Up",
+                                        "name": "Intensify Action",
                                         "image": {
                                             "url": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/skill_img/087ffffe40c28a40a39dc4a577c235f4cc375540c79dfa8ede1d8b63a063f261_0.png?Expires=1673308800&Signature=UKHaPiCmrfnQq5vfp5RXGGV9~SxVbN3h-eSF-NE~ujnsJinds2N3H7AX83983BsfI-JbeGIiU4Qc2EC3jTIwoB6bwwxorPSaM6h2tzWl0K0LNR12L~xwbdEApDJETSILxdaMrFJPO1uKswmsIdP1ARC80ihWUEdgLnUHzrDANPKgWZJgrpw9NqX523TyYxI0iykiJw3Pig~WT7n96OO8Mg1b8ZlaYlJ0~gsg1If2-8tBNWI6hnmlGB0EGDGT~H57f9tCObi-lZOKx4lXFDN~ff27vyV8Y0J8BBSwBPPVCWkpAnnZnVIFRznyRwSi9cRNmN0O8vLm7elaZrP3tGHWfw__&Key-Pair-Id=KNBS2THMRC385"
                                         }
@@ -1777,7 +1777,7 @@
                                             }
                                         },
                                         {
-                                            "name": "Quick Respawn",
+                                            "name": "Intensify Action",
                                             "image": {
                                                 "url": "https://api.lp1.av5ja.srv.nintendo.net/resources/prod/skill_img/aaa9b7e95a61bfd869aaa9beb836c74f9b8d4e5d4186768a27d6e443c64f33ce_0.png?Expires=1673308800&Signature=W3qq4lkYiTLclfHYb4y0bfjRI0ZDvTCHjXlTjW94QFmaXFE-tX3pRA4iuSik55BcKoUQB8-MWXiAhXlkWZ5ACSRHKh42yzmR2Rdf5S-pQzVKNILb48aAFb2BKHw~qvhPWvr-UqcMCdLS9t48nVXrkMOsbDrq~DK7Ea2VCSP2oxExiA1YZZ6azDlo4EybbrH81O5x~4LPTLQPpngW8Cwdox4yH9q3t~KxP6pUysG3gasMtQvFBPdNeun-xYs1pGebIFVt~eab96x~nep0L9WgEcxk1xH2qHWYt~YlEhDvc6bO6GmkqXJXL~rdn79hjn8sUZV3RlC75j5qJ-bGiUAn8Q__&Key-Pair-Id=KNBS2THMRC385"
                                             }
