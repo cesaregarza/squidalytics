@@ -1,6 +1,6 @@
 import json
 from dataclasses import is_dataclass
-from typing import Any, Callable, Type, cast
+from typing import Any, Callable, Type
 
 
 class SecondaryException(Exception):
@@ -69,7 +69,6 @@ class JSONDataClass:
                     setattr(self, key, attrset)
             except Exception as e:
                 if not isinstance(e, SecondaryException):
-                    # print(f"key: {keyval}, value: {value}")
                     raise SecondaryException from e
                 else:
                     raise e
