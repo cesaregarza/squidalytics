@@ -125,6 +125,68 @@ class TestJsonDataClass:
 
         level0_loaded.traverse_tree(stringify)
 
+    def test_to_dict(self, level1_loaded) -> None:
+        level1_dict = level1_loaded.to_dict(False)
+        expected_1 = {
+            "a": {
+                "b": [
+                    {
+                        "c": 3,
+                        "d": None,
+                        "e": "f",
+                        "__g": None,
+                        "h": [],
+                        "i": [[], []],
+                    },
+                    {
+                        "c": 4,
+                        "d": None,
+                        "e": "f",
+                        "__g": None,
+                        "h": [],
+                        "i": [[], []],
+                    },
+                    {
+                        "c": 5,
+                        "d": None,
+                        "e": "f",
+                        "__g": None,
+                        "h": [],
+                        "i": None,
+                    },
+                ]
+            },
+            "j": 1,
+        }
+        assert level1_dict == expected_1
+
+        expected_2 = {
+            "a": {
+                "b": [
+                    {
+                        "c": 3,
+                        "e": "f",
+                        "h": [],
+                        "i": [[], []],
+                    },
+                    {
+                        "c": 4,
+                        "e": "f",
+                        "h": [],
+                        "i": [[], []],
+                    },
+                    {
+                        "c": 5,
+                        "e": "f",
+                        "h": [],
+                    },
+                ]
+            },
+            "j": 1,
+        }
+        level1_dict = level1_loaded.to_dict(True)
+        assert level1_dict == expected_2
+
 
 class TestAnarchySchema:
 

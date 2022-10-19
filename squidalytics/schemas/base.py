@@ -1,3 +1,4 @@
+import json
 from dataclasses import is_dataclass
 from typing import Any, Callable, Type, cast
 
@@ -218,6 +219,53 @@ class JSONDataClass:
             list[str]: The top level keys of the object tree.
         """
         return list(self.__dict__.keys())
+
+    def to_dict(self, drop_nones: bool = True) -> dict[str, Any]:
+        """Convert the object tree to a dictionary.
+
+        Args:
+            drop_nones (bool, optional): If True, then any keys with a value of
+                None will be dropped. Defaults to True.
+
+        Returns:
+            dict[str, Any]: The object tree as a dictionary.
+        """
+        out = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, JSONDataClass):
+                out[key] = value.to_dict(drop_nones=drop_nones)
+            elif isinstance(value, list):
+                li = []
+                for item in value:
+                    if isinstance(item, JSONDataClass):
+                        li.append(item.to_dict(drop_nones=drop_nones))
+                    else:
+                        li.append(item)
+                out[key] = li
+            else:
+                if drop_nones and value is None:
+                    continue
+                out[key.replace("_", "__")] = value
+        return out
+
+    def load(self, filename: str) -> None:
+        """Load the object tree from a JSON file.
+
+        Args:
+            filename (str): The path to the JSON file.
+        """
+        with open(filename, "r") as f:
+            data = json.load(f)
+        self.__init__(**data)
+
+    def save(self, filename: str) -> None:
+        """Save the object tree to a JSON file.
+
+        Args:
+            filename (str): The path to the JSON file.
+        """
+        with open(filename, "w") as f:
+            json.dump(self.to_dict(), f, indent=4)
 
 
 class JSONDataClassListTopLevel(JSONDataClass):
