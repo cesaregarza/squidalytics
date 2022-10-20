@@ -1,4 +1,5 @@
 import json
+import re
 
 import requests
 from bs4 import BeautifulSoup
@@ -50,3 +51,42 @@ def localize(language_data: dict, key: str) -> str:
     except KeyError:
         pass
     return language_data[SPECIAL_KEY][key]
+
+
+def get_versus_weapons() -> list[dict]:
+    weapon_data = get_weapon_data()
+    return [x for x in weapon_data if x.get("Type", None) == "Versus"]
+
+
+def get_coop_weapons() -> list[dict]:
+    weapon_data = get_weapon_data()
+    return [x for x in weapon_data if x.get("Type", None) == "Coop"]
+
+
+def map_localized_names(weapon_data: list[dict]) -> list[dict]:
+    language_data = get_language_data()
+    special_regex = re.compile(
+        r"(?<=Work\/Gyml\/).*(?=\.spl__WeaponInfoSpecial\.gyml)"
+    )
+    sub_regex = re.compile(r"(?<=Work\/Gyml\/).*(?=\.spl__WeaponInfoSub\.gyml)")
+    for weapon in weapon_data:
+        weapon["Name"] = localize(language_data, weapon["__RowId"])
+        special = special_regex.search(weapon["SpecialWeapon"]).group(0)
+        sub = sub_regex.search(weapon["SubWeapon"]).group(0)
+        weapon["Special"] = localize(language_data, special)
+        weapon["Sub"] = localize(language_data, sub)
+
+    return weapon_data
+
+
+def get_versus_weapons_simplified() -> list[dict]:
+    full_list = map_localized_names(get_versus_weapons())
+    out = []
+    for weapon in full_list:
+        li = [
+            {k: v}
+            for k, v in weapon.items()
+            if k in ["Name", "Special", "Sub", "Range", "SpecialPoint"]
+        ]
+        out.append(li)
+    return out
