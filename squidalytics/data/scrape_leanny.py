@@ -81,12 +81,12 @@ def map_localized_names(weapon_data: list[dict]) -> list[dict]:
 
 def get_versus_weapons_simplified() -> list[dict]:
     full_list = map_localized_names(get_versus_weapons())
-    out = []
+    out = {}
     for weapon in full_list:
-        li = [
-            {k: v}
+        dic = {
+            k: v
             for k, v in weapon.items()
             if k in ["Name", "Special", "Sub", "Range", "SpecialPoint"]
-        ]
-        out.append(li)
+        }
+        out[dic["Name"]] = dic
     return out

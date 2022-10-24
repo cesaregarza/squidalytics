@@ -4,6 +4,7 @@ from typing import Any
 import pandas as pd
 
 from squidalytics.constants import ABILITIES, ALL_ABILITIES
+from squidalytics.data.scrape_leanny import get_versus_weapons_simplified
 from squidalytics.schemas.base import JSONDataClass, JSONDataClassListTopLevel
 from squidalytics.schemas.general import (
     colorSchema,
@@ -470,3 +471,12 @@ class battleSchema(JSONDataClassListTopLevel):
         df["duration"] = pd.to_timedelta(df["duration"], "s")
         df["end_time"] = df["played_time"] + df["duration"]
         return df
+
+    def to_pandas_detailed(self) -> pd.DataFrame:
+        """Convert the battleSchema to a pandas DataFrame with detailed stats.
+
+        Returns:
+            pd.DataFrame: A DataFrame of the match's stats.
+        """
+        base_df = self.to_pandas()
+        weapon_map = get_versus_weapons_simplified()

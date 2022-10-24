@@ -1,4 +1,7 @@
-from typing import Any
+import re
+
+first_pattern = re.compile(r"(.)([A-Z][a-z]+)")
+second_pattern = re.compile(r"([a-z0-9])([A-Z])")
 
 
 def flatten_dict(
@@ -41,3 +44,19 @@ def flatten_dict(
         else:
             output_dict[key] = value
     return output_dict
+
+
+def weapon_column_rename(column_name: str) -> str:
+    """Renames the weapon column names from CamelCase to snake_case and prepends
+    "weapon_" to the column name.
+
+    Args:
+        column_name (str): The column name to rename.
+
+    Returns:
+        str: The renamed column name.
+    """
+    # This function is for efficiency, since the patterns are compiled only once
+    column_name = first_pattern.sub(r"\1_\2", column_name)
+    column_name = second_pattern.sub(r"\1_\2", column_name).lower()
+    return "weapon_" + column_name
