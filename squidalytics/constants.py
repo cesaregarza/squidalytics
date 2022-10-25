@@ -1,3 +1,10 @@
+from functools import cached_property
+
+from squidalytics.data.scrape_leanny import (
+    WeaponsMap,
+    get_versus_weapons_simplified,
+)
+
 PRIMARY_ONLY = [
     "Comeback",
     "Last-Ditch Effort",
@@ -31,3 +38,18 @@ ABILITIES = [
 ]
 
 ALL_ABILITIES = PRIMARY_ONLY + ABILITIES
+
+
+class WeaponReference:
+    def __init__(self) -> None:
+        self._versus_weapons: WeaponsMap | None = None
+        self._coop_weapons: WeaponsMap | None = None
+
+    @cached_property
+    def versus_weapons(self) -> WeaponsMap:
+        if self._versus_weapons is None:
+            self._versus_weapons = get_versus_weapons_simplified()
+        return self._versus_weapons
+
+
+WEAPON_MAP = WeaponReference()

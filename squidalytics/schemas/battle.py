@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
-from squidalytics.constants import ABILITIES, ALL_ABILITIES
+from squidalytics.constants import ABILITIES, ALL_ABILITIES, WEAPON_MAP
 from squidalytics.data.scrape_leanny import get_versus_weapons_simplified
 from squidalytics.schemas.base import JSONDataClass, JSONDataClassListTopLevel
 from squidalytics.schemas.general import (
@@ -193,6 +194,7 @@ class playerFullSchema(playerSchema):
             "species": self.species,
             "paint": self.paint,
         }
+        out["weapon_details"] = self.weapon_details
         if self.result:
             append = {
                 "elimination": self.result.kill,
@@ -211,6 +213,10 @@ class playerFullSchema(playerSchema):
             }
         out.update(append)
         return out
+
+    @property
+    def weapon_details(self) -> dict:
+        return WEAPON_MAP.versus_weapons[self.weapon.name]
 
 
 @dataclass(repr=False)
@@ -278,7 +284,9 @@ class teamSchema(JSONDataClass):
             )
         return out
 
-    def team_summary(self, player_summaries: list[dict] | None = None) -> dict:
+    def team_summary(
+        self, player_summaries: list[dict] | None = None, detailed: bool = False
+    ) -> dict:
         """Get an overall summary of the team.
 
         Args:
@@ -286,6 +294,8 @@ class teamSchema(JSONDataClass):
                 to use. If None, the player summaries will be calculated.
                 Passing in a list of player summaries reduces redundant work.
                 Defaults to None.
+            detailed (bool, optional): Whether to include detailed information
+                about the team. Defaults to False.
 
         Returns:
             dict: A dictionary of team statistics.
@@ -300,7 +310,16 @@ class teamSchema(JSONDataClass):
             "paint": sum(player["paint"] for player in player_summaries),
             "score": self.score,
         }
-        return team_total
+        if not detailed:
+            return team_total
+
+        # Add additional information if detailed is True.
+        weapon_ranges = [
+            player["weapon_details"]["Range"] for player in player_summaries
+        ]
+        team_total["range_mean"] = np.mean(weapon_ranges)
+        team_total["range_var"] = np.var(weapon_ranges)
+        team_total["range_median"] = np.median(weapon_ranges)
 
 
 @dataclass(repr=False)
@@ -383,9 +402,9 @@ class vsHistoryDetailSchema(JSONDataClass):
             "duration": self.duration,
             "played_time": self.playedTime,
             "my_stats": self.my_stats(),
-            "my_team": self.myTeam.player_summary(True),
+            "my_team": self.myTeam.player_summary(detailed=True),
             "other_teams": [
-                team.player_summary(True) for team in self.otherTeams
+                team.player_summary(detailed=True) for team in self.otherTeams
             ],
             "awards": self.count_awards(),
             "my_team_stats": self.myTeam.team_summary(),

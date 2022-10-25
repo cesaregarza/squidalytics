@@ -1,5 +1,6 @@
 import json
 import re
+from typing import TypeAlias
 
 import requests
 from bs4 import BeautifulSoup
@@ -9,6 +10,8 @@ VERSION_URL = (
     "https://github.com/Leanny/leanny.github.io/tree/master/splat3/data/mush"
 )
 LANG_URL = "Leanny/leanny.github.io/master/splat3/data/language/USen.json"
+
+WeaponsMap: TypeAlias = dict[str, dict[str, str | float]]
 
 
 def get_latest_version_url() -> str:
@@ -79,7 +82,7 @@ def map_localized_names(weapon_data: list[dict]) -> list[dict]:
     return weapon_data
 
 
-def get_versus_weapons_simplified() -> list[dict]:
+def get_versus_weapons_simplified() -> dict[str, dict[str, str | float]]:
     full_list = map_localized_names(get_versus_weapons())
     out = {}
     for weapon in full_list:

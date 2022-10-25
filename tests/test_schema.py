@@ -205,6 +205,13 @@ class TestAnarchySchema:
         "abilities": joy_abilities,
         "weapon": "Splatterscope",
         "weapon_id": "V2VhcG9uLTIwMjA=",
+        "weapon_details": {
+            "Name": "Splatterscope",
+            "Range": 28.0,
+            "SpecialPoint": 200,
+            "Special": "Ink Vac",
+            "Sub": "Splat Bomb",
+        },
         "species": "INKLING",
         "paint": 1073,
         "elimination": 8,
@@ -220,6 +227,11 @@ class TestAnarchySchema:
         "special": (2 + 2 + 2 + 4),
         "paint": (970 + 994 + 1327 + 1073),
         "score": 53,
+    }
+    team_stats_detailed = {
+        **team_stats,
+        "range_mean": 15.825,
+        "range_median": 15.0,
     }
     joy_awards = [
         ("#1 Super Jump Spot", "GOLD"),
