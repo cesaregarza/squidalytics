@@ -209,7 +209,7 @@ pyflakes = ">=2.5.0,<2.6.0"
 name = "genson"
 version = "1.2.2"
 description = "GenSON is a powerful, user-friendly JSON Schema generator."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -766,7 +766,7 @@ python-versions = "*"
 name = "typing-extensions"
 version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -794,7 +794,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b05744d1577e8ffadba025221613ef36ef08705be3954f3f3f0182029d50e4d9"
+content-hash = "523197b6dbb342df6425520299cc75e827f9efa862c96d293ad9f3e0be1fceb6"
 
 [metadata.files]
 appnope = [

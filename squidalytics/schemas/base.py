@@ -1,6 +1,7 @@
 import json
 from dataclasses import is_dataclass
 from typing import Any, Callable, Type
+from typing_extensions import Self
 
 
 class SecondaryException(Exception):
@@ -257,7 +258,8 @@ class JSONDataClass:
         """
         return self.traverse_tree(lambda x: x, drop_nones)
 
-    def load(self, filename: str) -> None:
+    @classmethod
+    def load(cls, filename: str) -> Self:
         """Load the object tree from a JSON file.
 
         Args:
@@ -265,7 +267,7 @@ class JSONDataClass:
         """
         with open(filename, "r") as f:
             data = json.load(f)
-        self.__init__(**data)
+        return cls(**data)
 
     def save(self, filename: str) -> None:
         """Save the object tree to a JSON file.
@@ -285,7 +287,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
     next_level_type: Type[JSONDataClass] = JSONDataClass
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         """Override the __new__ method to ensure that making the class into a
         dataclass is not allowed.
 
@@ -406,3 +408,14 @@ class JSONDataClassListTopLevel(JSONDataClass):
             dict[str, Any]: The object tree as a dictionary.
         """
         return self.traverse_tree(lambda x: x, drop_nones)
+
+    @classmethod
+    def load(cls, filename: str) -> Self:
+        """Load the object tree from a JSON file.
+
+        Args:
+            filename (str): The path to the JSON file.
+        """
+        with open(filename, "r") as f:
+            data = json.load(f)
+        return cls(data)
