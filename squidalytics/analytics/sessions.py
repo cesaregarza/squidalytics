@@ -42,6 +42,9 @@ def generate_session_ids(
     relative_position = df.groupby(session_int).cumcount() / session_size
     # Not necessary but for completeness, set all sessions of length 1 to 1.0,
     # since 1.0 marks the end of the session and is probably more intuitive.
+
+    # NOTE: MUTATES relative_position. MUST BE TAKEN INTO ACCOUNT IF THIS IS
+    #       EVER TO RUN IN PARALLEL.
     relative_position.loc[session_size == 1] = 1.0
     return pd.concat(
         [session_id, relative_position],
