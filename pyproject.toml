@@ -53,4 +53,5 @@ addopts = [
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "internet: marks tests as requiring internet access (deselect with '-m \"not internet\"')",
 ]

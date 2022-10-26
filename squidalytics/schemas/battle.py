@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 from squidalytics.constants import ABILITIES, ALL_ABILITIES, WEAPON_MAP
-from squidalytics.data.scrape_leanny import get_versus_weapons_simplified
 from squidalytics.schemas.base import JSONDataClass, JSONDataClassListTopLevel
 from squidalytics.schemas.general import (
     colorSchema,
@@ -294,8 +293,8 @@ class teamSchema(JSONDataClass):
                 to use. If None, the player summaries will be calculated.
                 Passing in a list of player summaries reduces redundant work.
                 Defaults to None.
-            detailed (bool, optional): Whether to include detailed information
-                about the team. Defaults to False.
+            detailed (bool): Whether to include detailed information about the
+                team. Defaults to False.
 
         Returns:
             dict: A dictionary of team statistics.
@@ -320,6 +319,7 @@ class teamSchema(JSONDataClass):
         team_total["range_mean"] = np.mean(weapon_ranges)
         team_total["range_var"] = np.var(weapon_ranges)
         team_total["range_median"] = np.median(weapon_ranges)
+        return team_total
 
 
 @dataclass(repr=False)
@@ -386,8 +386,12 @@ class vsHistoryDetailSchema(JSONDataClass):
                 return player
         raise ValueError("Could not find user's stats.")
 
-    def summary(self) -> dict:
+    def summary(self, detailed: bool = False) -> dict:
         """Get a summary of the match.
+
+        Args:
+            detailed (bool): Whether to include detailed information about the
+                match. Defaults to False.
 
         Returns:
             dict: A dictionary of the match's stats.
@@ -407,9 +411,9 @@ class vsHistoryDetailSchema(JSONDataClass):
                 team.player_summary(detailed=True) for team in self.otherTeams
             ],
             "awards": self.count_awards(),
-            "my_team_stats": self.myTeam.team_summary(),
+            "my_team_stats": self.myTeam.team_summary(detailed=detailed),
             "other_team_stats": [
-                team.team_summary() for team in self.otherTeams
+                team.team_summary(detailed=detailed) for team in self.otherTeams
             ],
         }
         return out
@@ -432,8 +436,14 @@ class battleNodeSchema(JSONDataClass):
         """
         return self.data.vsHistoryDetail.judgement != "EXEMPTED_LOSE"
 
-    def match_summary(self) -> dict[str, int | float | str | None]:
+    def match_summary(
+        self, detailed: bool = False
+    ) -> dict[str, int | float | str | None]:
         """Get a flat summary of the match, with no nested dictionaries.
+
+        Args:
+            detailed (bool): Whether to include detailed information
+                about the match. Defaults to False.
 
         Raises:
             ValueError: If the match is a tricolor match.
@@ -443,7 +453,7 @@ class battleNodeSchema(JSONDataClass):
         """
         if len(self.data.vsHistoryDetail.otherTeams) > 1:
             raise ValueError("Flat summary does not support tricolor matches.")
-        summary = self.data.vsHistoryDetail.summary()
+        summary = self.data.vsHistoryDetail.summary(detailed=detailed)
         summary.pop("my_team")
         summary.pop("other_teams")
         my_stats = summary.pop("my_stats")
@@ -479,23 +489,18 @@ class battleNodeSchema(JSONDataClass):
 class battleSchema(JSONDataClassListTopLevel):
     next_level_type = battleNodeSchema
 
-    def to_pandas(self) -> pd.DataFrame:
+    def to_pandas(self, detailed: bool = False) -> pd.DataFrame:
         """Convert the battleSchema to a pandas DataFrame.
+
+        Args:
+            detailed (bool): Whether to include detailed information about the
+                match in the DataFrame. Defaults to False.
 
         Returns:
             pd.DataFrame: A DataFrame of the match's stats.
         """
-        df = pd.DataFrame(self.match_summary())
+        df = pd.DataFrame(self.match_summary(detailed=detailed))
         df["played_time"] = pd.to_datetime(df["played_time"])
         df["duration"] = pd.to_timedelta(df["duration"], "s")
         df["end_time"] = df["played_time"] + df["duration"]
         return df
-
-    def to_pandas_detailed(self) -> pd.DataFrame:
-        """Convert the battleSchema to a pandas DataFrame with detailed stats.
-
-        Returns:
-            pd.DataFrame: A DataFrame of the match's stats.
-        """
-        base_df = self.to_pandas()
-        weapon_map = get_versus_weapons_simplified()

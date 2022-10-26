@@ -24,7 +24,6 @@ class JSONDataClass:
         dictionary as the argument.
 
         Raises:
-            TypeError: If the annotation is not a dataclass.
             SecondaryException: If the key of the dictionary is not found in the
                 result of the get_annotations() method.
             Exception: SecondaryExceptions get passed up the chain.
@@ -197,7 +196,7 @@ class JSONDataClass:
 
     def traverse_tree(
         self, func: Callable[[Any, str], Any], prune_none: bool = False
-    ) -> None:
+    ) -> dict:
         """Traverse the object tree and apply the given function to each object.
 
         Args:
@@ -205,8 +204,12 @@ class JSONDataClass:
                 First attempts to call the function with the object and the key
                 as arguments. If this fails, then it will call the function on
                 just the object.
-            prune_none (bool, optional): If True, then prune the branches where
-                the function returns None. Defaults to False.
+            prune_none (bool): If True, then prune the branches where the
+                function returns None. Defaults to False.
+
+        Returns:
+            dict: A dictionary of the results of the function applied to each
+                object.
         """
         out = {}
         for key, value in self.__dict__.items():
@@ -246,8 +249,8 @@ class JSONDataClass:
         traverse_tree method with the function set to return the object.
 
         Args:
-            drop_nones (bool, optional): If True, then any keys with a value of
-                None will be dropped. Defaults to True.
+            drop_nones (bool): If True, then any keys with a value of None will
+                be dropped. Defaults to True.
 
         Returns:
             dict[str, Any]: The object tree as a dictionary.
@@ -285,6 +288,16 @@ class JSONDataClassListTopLevel(JSONDataClass):
     def __new__(cls, *args, **kwargs):
         """Override the __new__ method to ensure that making the class into a
         dataclass is not allowed.
+
+        Args:
+            *args: The arguments to pass to the __new__ method.
+            **kwargs: The keyword arguments to pass to the __new__ method.
+
+        Raises:
+            TypeError: If the class is being made into a dataclass.
+
+        Returns:
+            JSONDataClassListTopLevel: The new instance of the class.
         """
         if is_dataclass(cls):
             raise TypeError(
@@ -386,8 +399,8 @@ class JSONDataClassListTopLevel(JSONDataClass):
         traverse_tree method with the function set to return the object.
 
         Args:
-            drop_nones (bool, optional): If True, then any keys with a value of
-                None will be dropped. Defaults to True.
+            drop_nones (bool): If True, then any keys with a value of None will
+                be dropped. Defaults to True.
 
         Returns:
             dict[str, Any]: The object tree as a dictionary.

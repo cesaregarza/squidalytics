@@ -82,7 +82,7 @@ def map_localized_names(weapon_data: list[dict]) -> list[dict]:
     return weapon_data
 
 
-def get_versus_weapons_simplified() -> dict[str, dict[str, str | float]]:
+def get_versus_weapons_simplified() -> WeaponsMap:
     full_list = map_localized_names(get_versus_weapons())
     out = {}
     for weapon in full_list:

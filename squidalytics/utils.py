@@ -11,9 +11,11 @@ def flatten_dict(
 
     Args:
         input_dict (dict): Nested dictionary to flatten
-        keep_path (bool, optional): Keep the full path to the value or not.
-            If True, the keys will be in the form of "a.b.c". Otherwise, the
-            keys will be in the form of "c". Defaults to False.
+        keep_path (bool): Keep the full path to the value or not. If True, the
+            keys will be in the form of "a.b.c". Otherwise, the keys will be in
+            the form of "c". Defaults to False.
+        separator (str): The separator to use when joining the keys. Defaults to
+            ".".
 
     Returns:
         dict: Flattened dictionary

@@ -421,6 +421,7 @@ class TestAnarchySchema:
 
         assert summary == self.flat_match_summary
 
+    @pytest.mark.internet
     def test_to_pandas(self, anarchy_loaded: battleSchema) -> None:
         df = anarchy_loaded.to_pandas()
         assert df.shape == (1, 34)
