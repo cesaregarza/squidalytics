@@ -33,13 +33,19 @@ def generate_session_ids(
     session_start = df.groupby(session_int)["played_time"].min()
     session_id_map = session_start.dt.strftime("%Y%m%d%H%M%S")
     session_id = session_int.map(session_id_map)
+    absolute_values = df.groupby(session_int).cumcount()
+    out = pd.concat(
+        [session_id, absolute_values + 1],
+        axis=1,
+        keys=["session_id", "game_number_in_session"],
+    )
     if not relative_column:
-        return session_id.to_frame()
+        return out
 
     session_size = (
         session_int.value_counts().sub(1).clip(lower=1).pipe(session_int.map)
     )
-    relative_position = df.groupby(session_int).cumcount() / session_size
+    relative_position = absolute_values / session_size
     # Not necessary but for completeness, set all sessions of length 1 to 1.0,
     # since 1.0 marks the end of the session and is probably more intuitive.
 
@@ -47,7 +53,5 @@ def generate_session_ids(
     #       EVER TO RUN IN PARALLEL.
     relative_position.loc[session_size == 1] = 1.0
     return pd.concat(
-        [session_id, relative_position],
-        axis=1,
-        keys=["session_id", "relative_position"],
+        [out, relative_position.rename("relative_position")], axis=1
     )
