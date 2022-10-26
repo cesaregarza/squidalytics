@@ -58,6 +58,7 @@ def weapon_column_rename(column_name: str) -> str:
     Returns:
         str: The renamed column name.
     """
+    # https://stackoverflow.com/a/1176023/12507525
     # This function is for efficiency, since the patterns are compiled only once
     column_name = first_pattern.sub(r"\1_\2", column_name)
     column_name = second_pattern.sub(r"\1_\2", column_name).lower()
