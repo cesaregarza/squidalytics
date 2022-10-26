@@ -1,6 +1,7 @@
 import json
 from dataclasses import is_dataclass
 from typing import Any, Callable, Type
+
 from typing_extensions import Self
 
 
