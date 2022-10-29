@@ -5,7 +5,7 @@ import pandas as pd
 
 def generate_session_ids(
     df: pd.DataFrame,
-    session_length: int | pd.Timedelta | timedelta = 5,
+    session_length: int | pd.Timedelta | timedelta = 10,
     relative_column: bool = False,
 ) -> pd.DataFrame:
     """Generate session ids for each row in the dataframe.
