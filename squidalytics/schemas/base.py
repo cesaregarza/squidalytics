@@ -1,6 +1,8 @@
 import json
 from dataclasses import is_dataclass
+from itertools import chain
 from typing import Any, Callable, Type
+import os
 
 from typing_extensions import Self
 
@@ -420,3 +422,61 @@ class JSONDataClassListTopLevel(JSONDataClass):
         with open(filename, "r") as f:
             data = json.load(f)
         return cls(data)
+
+    @classmethod
+    def load_all_from_dir(cls, directory: str, recursive: bool = False) -> Self:
+        """Load all the JSON files from a directory into a single object tree.
+        If recursive is True, then all subdirectories will be searched as well.
+        Any improperly formatted JSON files will be skipped.
+
+        Args:
+            directory (str): The path to the directory.
+
+        Returns:
+            Self: The object tree.
+        """
+        data = []
+        for filename in os.listdir(directory):
+            if recursive:
+                full_path = os.path.join(directory, filename)
+                if os.path.isdir(full_path):
+                    data.extend(cls.load_all_from_dir(full_path, recursive))
+                    continue
+            if filename.endswith(".json"):
+                try:
+                    obj = cls.load(os.path.join(directory, filename))
+                    data.append(obj)
+                except Exception as e:
+                    continue
+        return cls.concatenate(data)
+
+    @classmethod
+    def are_same_type(cls, other: Any) -> bool:
+        """Check if the other object is of the same type as this one.
+
+        Args:
+            other (Any): The other object to check.
+
+        Returns:
+            bool: If the other object is of the same type as this one.
+        """
+        return isinstance(other, cls) and (
+            cls.next_level_type == other.next_level_type
+        )
+
+    @classmethod
+    def concatenate(cls, *args: list[Self]) -> Self:
+        """Concatenate the given objects into a single object.
+
+        Args:
+            *args: The objects to concatenate.
+
+        Returns:
+            Self: The concatenated object.
+        """
+        if len(args) == 0:
+            raise ValueError("No objects to concatenate")
+        if not all(cls.are_same_type(arg) for arg in args):
+            raise TypeError("All objects must be of the same type")
+
+        return cls([*chain(*args)])

@@ -1,7 +1,7 @@
+import numpy as np
+import pandas as pd
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
-import pandas as pd
-import numpy as np
 
 
 def generate_winrate_grid(df: pd.DataFrame) -> go.Figure:
@@ -16,9 +16,9 @@ def generate_winrate_grid(df: pd.DataFrame) -> go.Figure:
     )
     fig.add_trace(
         go.Heatmap(
-            z = df.values,
-            x = df.columns.tolist(),
-            y = df.index.tolist(),
+            z=df.values,
+            x=df.columns.tolist(),
+            y=df.index.tolist(),
             colorscale="Viridis",
             hovertemplate=hovertemplate,
         )
@@ -34,7 +34,7 @@ def generate_winrate_grid(df: pd.DataFrame) -> go.Figure:
             showarrow=False,
             text=x_name,
             xref="paper",
-            yref="paper"
+            yref="paper",
         )
     )
     fig.add_annotation(
@@ -46,7 +46,7 @@ def generate_winrate_grid(df: pd.DataFrame) -> go.Figure:
             text=y_name,
             textangle=-90,
             xref="paper",
-            yref="paper"
+            yref="paper",
         )
     )
     return fig
