@@ -222,6 +222,8 @@ class TestJsonDataClass:
             json.dump(preload[1:2], f)
         with open(str(path_2 / "t2.json"), "w") as f:
             json.dump(preload[2:3], f)
+        with open(str(path_2 / "fail.json"), "w") as f:
+            json.dump([3], f)
         paths = [
             x / f"t{i}.json" for i, x in enumerate([tmp_path, path_1, path_2])
         ]
@@ -266,6 +268,10 @@ class TestJsonDataClass:
         concat_dict = concat.to_dict()
         for x in concat_dict:
             assert x in expected.to_dict()
+        with pytest.raises(ValueError):
+            B.concatenate()
+        with pytest.raises(TypeError):
+            B.concatenate(*a_x[:2], 1)
 
 
 class TestAnarchySchema:
