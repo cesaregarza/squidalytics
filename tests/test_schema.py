@@ -108,7 +108,7 @@ class TestJsonDataClass:
         with pytest.raises(IndexError):
             level1_loaded[:]
         level2 = level1_loaded["a"]
-        level2_sliced = level2[:]
+        level2[:]  # make sure it doesn't raise an error
         assert level2["b", 0, "c"] == 3
 
     def test_getattr_toplevel(self, level0_loaded) -> None:

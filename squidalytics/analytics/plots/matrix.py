@@ -1,6 +1,4 @@
-import numpy as np
 import pandas as pd
-import plotly.figure_factory as ff
 import plotly.graph_objects as go
 
 

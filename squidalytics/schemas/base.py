@@ -1,7 +1,6 @@
 import json
 import os
 from dataclasses import is_dataclass
-from itertools import chain
 from pathlib import Path
 from typing import Any, Callable, Type
 from warnings import warn
@@ -269,6 +268,9 @@ class JSONDataClass:
 
         Args:
             filename (str): The path to the JSON file.
+
+        Returns:
+            Self: The object tree.
         """
         with open(filename, "r") as f:
             data = json.load(f)
@@ -304,7 +306,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
             TypeError: If the class is being made into a dataclass.
 
         Returns:
-            JSONDataClassListTopLevel: The new instance of the class.
+            Self: The new instance of the class.
         """
         if is_dataclass(cls):
             raise TypeError(
@@ -416,10 +418,15 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
     @classmethod
     def load(cls, filename: str | list[str]) -> Self:
-        """Load the object tree from a JSON file.
+        """Load the object tree from a JSON file. If a list of filenames is
+        provided, then load each file and return a list of the objects.
 
         Args:
-            filename (str): The path to the JSON file.
+            filename (str | list[str]): The path to the JSON file, or a list of
+                paths to the JSON files.
+
+        Returns:
+            Self: The object tree.
         """
         if isinstance(filename, (str, Path)):
             return cls.__load_one(filename)
@@ -430,6 +437,14 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
     @classmethod
     def __load_one(cls, filename: str) -> Self:
+        """Load the object tree from a single JSON file.
+
+        Args:
+            filename (str): The path to the JSON file.
+
+        Returns:
+            Self: The loaded object tree, as an instance of the class.
+        """
         with open(filename, "r") as f:
             data = json.load(f)
         return cls(data)
@@ -442,6 +457,8 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
         Args:
             directory (str): The path to the directory.
+            recursive (bool): If True, then all subdirectories will be searched
+                as well. Defaults to False.
 
         Returns:
             Self: The object tree.
@@ -457,7 +474,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
                 try:
                     obj = cls.load(os.path.join(directory, filename))
                     data.append(obj)
-                except Exception as e:
+                except Exception:
                     continue
         return cls.concatenate(*data)
 
@@ -481,6 +498,10 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
         Args:
             *args: The objects to concatenate.
+
+        Raises:
+            ValueError: If no objects are given.
+            TypeError: If the objects are not of the same type.
 
         Returns:
             Self: The concatenated object.
