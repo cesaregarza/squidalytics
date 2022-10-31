@@ -222,6 +222,36 @@ class TestJsonDataClass:
             json.dump(preload[1:2], f)
         with open(str(path_2 / "t2.json"), "w") as f:
             json.dump(preload[2:3], f)
+        paths = [
+            x / f"t{i}.json" for i, x in enumerate([tmp_path, path_1, path_2])
+        ]
+        load = simple_level0_class.load(paths)
+        load_dict = load.to_dict()
+        expected_to_dict = simple_level0_loaded.to_dict()
+        # Because the files might be loaded in a different order, we just need
+        # to iterate through the list and check that the expected values are
+        # present
+        for x in load_dict:
+            assert x in expected_to_dict
+
+    def test_load_all_from_dir(
+        self,
+        simple_level0_class: JSONDataClassListTopLevel,
+        simple_level0_loaded: SimpleLevel0,
+        tmp_path: Path,
+    ) -> None:
+        # Split the test json into three files at different directory depths
+        path_1 = tmp_path / "a"
+        path_1.mkdir()
+        path_2 = path_1 / "b"
+        path_2.mkdir()
+        preload = simple_level0_loaded.to_dict()
+        with open(str(tmp_path / "t0.json"), "w") as f:
+            json.dump(preload[0:1], f)
+        with open(str(path_1 / "t1.json"), "w") as f:
+            json.dump(preload[1:2], f)
+        with open(str(path_2 / "t2.json"), "w") as f:
+            json.dump(preload[2:3], f)
         load = simple_level0_class.load_all_from_dir(tmp_path, True)
         load_dict = load.to_dict()
         expected_to_dict = simple_level0_loaded.to_dict()

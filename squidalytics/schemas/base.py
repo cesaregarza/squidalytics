@@ -2,6 +2,7 @@ import json
 import os
 from dataclasses import is_dataclass
 from itertools import chain
+from pathlib import Path
 from typing import Any, Callable, Type
 from warnings import warn
 
@@ -414,12 +415,21 @@ class JSONDataClassListTopLevel(JSONDataClass):
         return self.traverse_tree(lambda x: x, drop_nones)
 
     @classmethod
-    def load(cls, filename: str) -> Self:
+    def load(cls, filename: str | list[str]) -> Self:
         """Load the object tree from a JSON file.
 
         Args:
             filename (str): The path to the JSON file.
         """
+        if isinstance(filename, (str, Path)):
+            return cls.__load_one(filename)
+        jsons = []
+        for file in filename:
+            jsons.append(cls.__load_one(file))
+        return cls.concatenate(*jsons)
+
+    @classmethod
+    def __load_one(cls, filename: str) -> Self:
         with open(filename, "r") as f:
             data = json.load(f)
         return cls(data)
