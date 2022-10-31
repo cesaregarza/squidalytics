@@ -1,6 +1,5 @@
 import json
 from dataclasses import dataclass
-from inspect import getfullargspec, signature
 from pathlib import Path
 
 import pytest
@@ -11,17 +10,20 @@ input_path = Path(__file__).parent.parent / "input_files"
 
 
 @pytest.fixture
-def test_json_dict() -> dict:
-    test_json_path = str(input_path / "test_json.json")
-    with open(test_json_path, "r") as f:
+def test_json_path() -> Path:
+    return input_path / "test_json.json"
+
+
+@pytest.fixture
+def test_json_dict(test_json_path: Path) -> dict:
+    with open(str(test_json_path), "r") as f:
         test_json = json.load(f)
     return test_json[0]
 
 
 @pytest.fixture
-def test_json_list() -> list[dict]:
-    test_json_path = str(input_path / "test_json.json")
-    with open(test_json_path, "r") as f:
+def test_json_list(test_json_path: Path) -> list[dict]:
+    with open(str(test_json_path), "r") as f:
         test_json = json.load(f)
     return test_json
 

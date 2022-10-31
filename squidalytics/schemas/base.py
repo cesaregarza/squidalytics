@@ -1,8 +1,8 @@
 import json
+import os
 from dataclasses import is_dataclass
 from itertools import chain
 from typing import Any, Callable, Type
-import os
 
 from typing_extensions import Self
 
@@ -440,7 +440,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
             if recursive:
                 full_path = os.path.join(directory, filename)
                 if os.path.isdir(full_path):
-                    data.extend(cls.load_all_from_dir(full_path, recursive))
+                    data.append(cls.load_all_from_dir(full_path, recursive))
                     continue
             if filename.endswith(".json"):
                 try:
@@ -448,7 +448,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
                     data.append(obj)
                 except Exception as e:
                     continue
-        return cls.concatenate(data)
+        return cls.concatenate(*data)
 
     @classmethod
     def are_same_type(cls, other: Any) -> bool:
@@ -479,4 +479,6 @@ class JSONDataClassListTopLevel(JSONDataClass):
         if not all(cls.are_same_type(arg) for arg in args):
             raise TypeError("All objects must be of the same type")
 
-        return cls([*chain(*args)])
+        data = [data for c in args for data in c.data]
+
+        return cls(data)
