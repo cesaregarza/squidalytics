@@ -34,6 +34,7 @@ from squidalytics.schemas.battle import (
 )
 from tests.fixtures.jsons import json_path
 from tests.fixtures.schema import Level0, input_path
+from tests.fixtures.simple_schema import SimpleLevel0
 
 base_path = (0, "data", "vsHistoryDetail")
 
@@ -206,7 +207,7 @@ class TestJsonDataClass:
     def test_load_multiple(
         self,
         simple_level0_class: JSONDataClassListTopLevel,
-        simple_level0_loaded: Level0,
+        simple_level0_loaded: SimpleLevel0,
         tmp_path: Path,
     ) -> None:
         # Split the test json into three files at different directory depths
@@ -229,6 +230,35 @@ class TestJsonDataClass:
         # present
         for x in load_dict:
             assert x in expected_to_dict
+
+    def test_are_same_type(self, simple_level0_loaded: SimpleLevel0) -> None:
+        slice_1: SimpleLevel0 = simple_level0_loaded[0:1]
+        slice_2: SimpleLevel0 = simple_level0_loaded[1:2]
+        assert slice_1.are_same_type(slice_2)
+        assert slice_2.are_same_type(slice_1)
+        assert not slice_1.are_same_type(1)
+        assert not slice_1.are_same_type(simple_level0_loaded[0])
+
+    def test_concatenate(self) -> None:
+        @dataclass
+        class A(JSONDataClass):
+            a: int
+
+        class B(JSONDataClassListTopLevel):
+            next_level_type = A
+
+        a_x = [B([A(2 * i), A(2 * i + 1)]) for i in range(6)]
+        expected = B([A(i) for i in range(12)])
+        concat = B.concatenate(*a_x)
+        concat_dict = concat.to_dict()
+        for x in concat_dict:
+            assert x in expected.to_dict()
+        # Repeat for passing in a_x without unpacking
+        with pytest.warns(UserWarning, match="Only one object to concatenate"):
+            concat = B.concatenate(a_x)
+        concat_dict = concat.to_dict()
+        for x in concat_dict:
+            assert x in expected.to_dict()
 
 
 class TestAnarchySchema:

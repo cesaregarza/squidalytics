@@ -3,6 +3,7 @@ import os
 from dataclasses import is_dataclass
 from itertools import chain
 from typing import Any, Callable, Type
+from warnings import warn
 
 from typing_extensions import Self
 
@@ -476,6 +477,14 @@ class JSONDataClassListTopLevel(JSONDataClass):
         """
         if len(args) == 0:
             raise ValueError("No objects to concatenate")
+        if len(args) == 1 and isinstance(args[0], list):
+            warn(
+                "Only one object to concatenate and it is a list. Unpacking"
+                " the list for you, but this may not be what you want. Do not"
+                " pass a list of objects to concatenate, instead pass each "
+                "object as a separate argument."
+            )
+            args = args[0]
         if not all(cls.are_same_type(arg) for arg in args):
             raise TypeError("All objects must be of the same type")
 
