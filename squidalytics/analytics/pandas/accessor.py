@@ -29,7 +29,7 @@ class SquidalyticsAccessor:
         JUDGE_MAP = self.JUDGE_MAP.copy()
         if not include_exempt:
             JUDGE_MAP["EXEMPTED_LOSE"] = np.nan
-        return self._obj["judge"].map(JUDGE_MAP)
+        return self._obj["judgement"].map(JUDGE_MAP)
 
     def winrate_grid(
         self, columns: list[str] | str
