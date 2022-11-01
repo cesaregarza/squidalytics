@@ -33,6 +33,7 @@ def heatmap(
     )
     if counts is not None:
         hovertemplate += "<b>Games Played</b>: %{customdata:,}<br>"
+    hovertemplate += "<extra></extra>"
     fig.add_trace(
         go.Heatmap(
             z=df.values,
@@ -45,6 +46,10 @@ def heatmap(
     )
     fig.update_layout(
         title_text="<i><b>Winrate</b></i>",
+        plot_bgcolor="white",
+        xaxis_showgrid=False,
+        yaxis_showgrid=False,
+        margin=dict(t=50, l=200)
     )
     fig.add_annotation(
         dict(
