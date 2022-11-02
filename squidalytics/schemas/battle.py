@@ -3,7 +3,9 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 
+from squidalytics.analytics.plots.heatmap import heatmap
 from squidalytics.constants import ABILITIES, ALL_ABILITIES, WEAPON_MAP
 from squidalytics.schemas.base import JSONDataClass, JSONDataClassListTopLevel
 from squidalytics.schemas.general import (
@@ -15,6 +17,7 @@ from squidalytics.schemas.general import (
     vsStageSchema,
     weaponSchema,
 )
+from squidalytics.utils import aggregate_masking
 
 
 @dataclass(repr=False)
@@ -504,3 +507,50 @@ class battleSchema(JSONDataClassListTopLevel):
         df["duration"] = pd.to_timedelta(df["duration"], "s")
         df["end_time"] = df["played_time"] + df["duration"]
         return df
+
+    def winrate_heatmap(
+        self,
+        groupby_columns: list[str] | str = ["stage", "rule"],
+        mask_series: list[pd.Series] | pd.Series | None = None,
+        mask_operation: str = "and",
+        figure_title_suffix: str = "",
+        fillna_value: int | float | None = None,
+    ) -> go.Figure:
+        """Create a heatmap of the winrate with the given parameters
+
+        Args:
+            groupby_columns (list[str] | str | None): Columns by which to group
+                the data by. Defaults to ["stage", "rule"].
+            mask_series (list[pd.Series] | pd.Series | None): Pandas Series to
+                apply on the given data before grouping. If a list of masks is
+            mask_operation (str): The operation to apply on the masks. Only
+                supports "and" and "or" operations. Defaults to "and".
+            figure_title_suffix (str): A suffix to add to the figure title.
+                Defaults to "".
+            fillna_value (int | float | np.nan | None): The value to fill
+                missing groupby combinations with. Defaults to None.
+
+        Returns:
+            go.Figure: The resulting figure
+        """
+        df = self.to_pandas()
+        if isinstance(mask_series, list):
+            mask_series = aggregate_masking(
+                *mask_series, operation=mask_operation
+            )
+
+        if mask_series is not None:
+            df = df.loc[mask_series]
+
+        if isinstance(fillna_value, int):
+            fillna_value = float(fillna_value)
+        elif fillna_value is None:
+            fillna_value = np.nan
+
+        winrate, wincount = df.squidalytics.winrate_grid(groupby_columns)
+        return heatmap(
+            winrate.unstack(),
+            wincount.unstack(),
+            fillna_value=fillna_value,
+            title_suffix=figure_title_suffix,
+        )

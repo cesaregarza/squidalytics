@@ -1,6 +1,12 @@
+import pandas as pd
+import pandas.testing as pdt
 import pytest
 
-from squidalytics.utils import flatten_dict, weapon_column_rename
+from squidalytics.utils import (
+    aggregate_masking,
+    flatten_dict,
+    weapon_column_rename,
+)
 
 
 def test_flatten_dict() -> None:
@@ -31,3 +37,17 @@ def test_flatten_dict() -> None:
 )
 def test_weapon_column_rename(input_str: str, expected_str: str) -> None:
     assert weapon_column_rename(input_str) == ("weapon_" + expected_str)
+
+
+def test_aggregate_masking() -> None:
+    mask1 = pd.Series([True, False, True, False])
+    mask2 = pd.Series([True, True, False, False])
+    mask3 = pd.Series([True, False, False, False])
+    expected_and = pd.Series([True, False, False, False])
+    expected_or = pd.Series([True, True, True, False])
+    and_series = aggregate_masking(mask1, mask2, mask3, operation="and")
+    or_series = aggregate_masking(mask1, mask2, mask3, operation="or")
+    pdt.assert_series_equal(and_series, expected_and)
+    pdt.assert_series_equal(or_series, expected_or)
+    with pytest.raises(ValueError):
+        aggregate_masking(mask1, mask2, mask3, operation="fail")

@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 
 def heatmap(
-    df: pd.DataFrame,
+    winrate_df: pd.DataFrame,
     counts: pd.DataFrame | None = None,
     fillna_value: float | None = 0.5,
     color: str = "RdYlGn",
@@ -12,7 +12,7 @@ def heatmap(
     """Generates a heatmap of the winrate for the given dataframe.
 
     Args:
-        df (pd.DataFrame): The dataframe to generate the heatmap for.
+        winrate_df (pd.DataFrame): The dataframe to generate the heatmap for.
         counts (pd.DataFrame | None): The number of games played for each cell.
             If None, then the number of games played will not be shown. Defaults
             to None.
@@ -25,12 +25,12 @@ def heatmap(
     Returns:
         go.Figure: Plotly figure of the heatmap.
     """
-    df = df.copy()
+    winrate_df = winrate_df.copy()
     if fillna_value is not None:
-        df = df.fillna(fillna_value)
+        winrate_df = winrate_df.fillna(fillna_value)
     fig = go.Figure()
-    x_name = df.columns.name
-    y_name = df.index.name
+    x_name = winrate_df.columns.name
+    y_name = winrate_df.index.name
     hovertemplate = (
         "<b>" + y_name + "</b>: %{y}<br>"
         "<b>" + x_name + "</b>: %{x}<br>"
@@ -41,9 +41,9 @@ def heatmap(
     hovertemplate += "<extra></extra>"
     fig.add_trace(
         go.Heatmap(
-            z=df.values,
-            x=df.columns.tolist(),
-            y=df.index.tolist(),
+            z=winrate_df.values,
+            x=winrate_df.columns.tolist(),
+            y=winrate_df.index.tolist(),
             colorscale=color,
             colorbar_tickformat=".0%",
             zmin=0.0,

@@ -2,9 +2,8 @@ from functools import cached_property
 
 import numpy as np
 import pandas as pd
-import pytest
 
-from squidalytics.analytics.pandas import accessor as acc
+from squidalytics.analytics.pandas import accessor
 
 
 class TestAccessor:
