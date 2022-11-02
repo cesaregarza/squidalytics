@@ -1,5 +1,7 @@
 import re
 
+import pandas as pd
+
 first_pattern = re.compile(r"(.)([A-Z][a-z]+)")
 second_pattern = re.compile(r"([a-z0-9])([A-Z])")
 
@@ -63,3 +65,31 @@ def weapon_column_rename(column_name: str) -> str:
     column_name = first_pattern.sub(r"\1_\2", column_name)
     column_name = second_pattern.sub(r"\1_\2", column_name).lower()
     return "weapon_" + column_name
+
+
+def aggregate_masking(*masks: pd.Series, operation: str = "and") -> pd.Series:
+    """Aggregate multiple masks into a single mask, given an operation to
+        aggregate. Assumes all masks have the same index and length.
+
+    Args:
+        *masks (pd.Series): The masks to aggregate.
+        operation (str): The operation to aggregate the masks with. Only accepts
+            "and", or "or". Defaults to "and".
+
+    Raises:
+        ValueError: If the operation is not "and" or "or".
+
+    Returns:
+        pd.Series: The aggregated mask.
+    """
+    if operation == "and":
+        aggregate_mask = pd.Series(True, index=masks[0].index)
+        for mask in masks:
+            aggregate_mask &= mask
+    elif operation == "or":
+        aggregate_mask = pd.Series(False, index=masks[0].index)
+        for mask in masks:
+            aggregate_mask |= mask
+    else:
+        raise ValueError("Invalid operation")
+    return aggregate_mask
