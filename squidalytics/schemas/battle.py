@@ -550,11 +550,16 @@ class battleSchema(JSONDataClassListTopLevel):
             fillna_value = np.nan
 
         winrate, wincount = df.squidalytics.winrate_grid(groupby_columns)
+        # Generate kwargs and use defaults if "None" is provided
+        kwarg_list = {}
+        if fillna_value is not None:
+            kwarg_list["fillna_value"] = fillna_value
+        if figure_title_suffix is not None:
+            kwarg_list["title_suffix"] = figure_title_suffix
         fig = heatmap(
             winrate.unstack(),
             wincount.unstack(),
-            fillna_value=fillna_value,
-            title_suffix=figure_title_suffix,
+            **kwarg_list,
         )
         if not static:
             return fig
