@@ -62,9 +62,13 @@ class TestAccessor:
         assert isinstance(wincount, pd.Series)
         assert winrate.shape == (len(self.STAGES) * len(self.RULES),)
         assert wincount.shape == (len(self.STAGES) * len(self.RULES),)
+        assert winrate.index.names == ["stage", "rule"]
+        assert wincount.index.names == ["stage", "rule"]
 
         winrate, wincount = df.squidalytics.winrate_grid("stage")
         assert isinstance(winrate, pd.Series)
         assert isinstance(wincount, pd.Series)
         assert winrate.shape == (len(self.STAGES),)
         assert wincount.shape == (len(self.STAGES),)
+        assert winrate.index.names == ["stage"]
+        assert wincount.index.names == ["stage"]
