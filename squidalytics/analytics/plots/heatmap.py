@@ -6,6 +6,7 @@ def heatmap(
     df: pd.DataFrame,
     counts: pd.DataFrame | None = None,
     fillna_value: float | None = 0.5,
+    color: str = "RdYlGn",
 ) -> go.Figure:
     """Generates a heatmap of the winrate for the given dataframe.
 
@@ -16,6 +17,8 @@ def heatmap(
             to None.
         fillna_value (float | None): The value to fill NaN values with. If None,
             then NaN values will not be filled. Defaults to float.
+        color (str): The color scheme to use for the heatmap. Defaults to
+            "RdYlGn".
 
     Returns:
         go.Figure: Plotly figure of the heatmap.
@@ -39,9 +42,14 @@ def heatmap(
             z=df.values,
             x=df.columns.tolist(),
             y=df.index.tolist(),
-            colorscale="Viridis",
+            colorscale=color,
+            colorbar_tickformat=".0%",
+            zmin=0.0,
+            zmax=1.0,
             hovertemplate=hovertemplate,
             customdata=counts.values if counts is not None else None,
+            text=counts.values if counts is not None else None,
+            texttemplate="%{text:,}",
         )
     )
     fig.update_layout(
@@ -49,7 +57,7 @@ def heatmap(
         plot_bgcolor="white",
         xaxis_showgrid=False,
         yaxis_showgrid=False,
-        margin=dict(t=50, l=200)
+        margin=dict(t=50, l=200),
     )
     fig.add_annotation(
         dict(
