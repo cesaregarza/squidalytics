@@ -389,6 +389,14 @@ traitlets = "*"
 test = ["ipykernel", "pre-commit", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
+name = "kaleido"
+version = "0.2.1"
+description = "Static image export for web-based visualization libraries with zero dependencies"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "matplotlib-inline"
 version = "0.1.6"
 description = "Inline Matplotlib backend for Jupyter"
@@ -868,7 +876,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "8d0bc06789463e7f3d34e798634157f8792fa3d9877aacd9d7d8250d7b7e7bba"
+content-hash = "f6b2c688c5f7ba17b35abf1fa0538a6e8aa1f624cad30385fa8bc91ebde0f7f0"
 
 [metadata.files]
 appnope = [
@@ -1137,6 +1145,14 @@ jupyter-client = [
 jupyter-core = [
     {file = "jupyter_core-4.11.1-py3-none-any.whl", hash = "sha256:715e22bb6cc7db3718fddfac1f69f1c7e899ca00e42bdfd4bf3705452b9fd84a"},
     {file = "jupyter_core-4.11.1.tar.gz", hash = "sha256:2e5f244d44894c4154d06aeae3419dd7f1b0ef4494dc5584929b398c61cfd314"},
+]
+kaleido = [
+    {file = "kaleido-0.2.1-py2.py3-none-macosx_10_11_x86_64.whl", hash = "sha256:ca6f73e7ff00aaebf2843f73f1d3bacde1930ef5041093fe76b83a15785049a7"},
+    {file = "kaleido-0.2.1-py2.py3-none-macosx_11_0_arm64.whl", hash = "sha256:bb9a5d1f710357d5d432ee240ef6658a6d124c3e610935817b4b42da9c787c05"},
+    {file = "kaleido-0.2.1-py2.py3-none-manylinux1_x86_64.whl", hash = "sha256:aa21cf1bf1c78f8fa50a9f7d45e1003c387bd3d6fe0a767cfbbf344b95bdc3a8"},
+    {file = "kaleido-0.2.1-py2.py3-none-manylinux2014_aarch64.whl", hash = "sha256:845819844c8082c9469d9c17e42621fbf85c2b237ef8a86ec8a8527f98b6512a"},
+    {file = "kaleido-0.2.1-py2.py3-none-win32.whl", hash = "sha256:ecc72635860be616c6b7161807a65c0dbd9b90c6437ac96965831e2e24066552"},
+    {file = "kaleido-0.2.1-py2.py3-none-win_amd64.whl", hash = "sha256:4670985f28913c2d063c5734d125ecc28e40810141bdb0a46f15b76c1d45f23c"},
 ]
 matplotlib-inline = [
     {file = "matplotlib-inline-0.1.6.tar.gz", hash = "sha256:f887e5f10ba98e8d2b150ddcf4702c1e5f8b3a20005eb0f74bfdbd360ee6f304"},
