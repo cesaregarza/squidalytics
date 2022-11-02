@@ -13,6 +13,7 @@ bs4 = "^0.0.1"
 requests = "^2.28.1"
 typing-extensions = "^4.4.0"
 plotly = "^5.11.0"
+kaleido = "0.2.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"

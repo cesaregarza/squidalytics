@@ -513,8 +513,9 @@ class battleSchema(JSONDataClassListTopLevel):
         groupby_columns: list[str] | str = ["stage", "rule"],
         mask_series: list[pd.Series] | pd.Series | None = None,
         mask_operation: str = "and",
-        figure_title_suffix: str = "",
+        figure_title_suffix: str | None = None,
         fillna_value: int | float | None = None,
+        static: bool = False,
     ) -> go.Figure:
         """Create a heatmap of the winrate with the given parameters
 
@@ -525,10 +526,11 @@ class battleSchema(JSONDataClassListTopLevel):
                 apply on the given data before grouping. If a list of masks is
             mask_operation (str): The operation to apply on the masks. Only
                 supports "and" and "or" operations. Defaults to "and".
-            figure_title_suffix (str): A suffix to add to the figure title.
-                Defaults to "".
+            figure_title_suffix (str | None): A suffix to add to the figure
+                title. Defaults to None.
             fillna_value (int | float | np.nan | None): The value to fill
                 missing groupby combinations with. Defaults to None.
+            static (bool): Whether to return a static figure. Defaults to False.
 
         Returns:
             go.Figure: The resulting figure
@@ -548,9 +550,13 @@ class battleSchema(JSONDataClassListTopLevel):
             fillna_value = np.nan
 
         winrate, wincount = df.squidalytics.winrate_grid(groupby_columns)
-        return heatmap(
+        fig = heatmap(
             winrate.unstack(),
             wincount.unstack(),
             fillna_value=fillna_value,
             title_suffix=figure_title_suffix,
         )
+        if not static:
+            return fig
+        
+        return fig.show(renderer="png")
