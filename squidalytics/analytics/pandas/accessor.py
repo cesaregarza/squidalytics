@@ -33,7 +33,7 @@ class SquidalyticsAccessor:
 
     def winrate_grid(
         self, columns: list[str] | str
-    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    ) -> tuple[pd.Series, pd.Series]:
         """Calculates the winrate and games played for each combination of the
         given columns.
 
@@ -42,8 +42,8 @@ class SquidalyticsAccessor:
 
         Returns:
             tuple:
-                pd.DataFrame: The winrate for the given columns.
-                pd.DataFrame: The number of games played for the given columns.
+                pd.Series: The winrate for the given columns.
+                pd.Series: The number of games played for the given columns.
         """
 
         df = self._obj.copy()

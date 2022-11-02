@@ -7,6 +7,7 @@ def heatmap(
     counts: pd.DataFrame | None = None,
     fillna_value: float | None = 0.5,
     color: str = "RdYlGn",
+    title_suffix: str = "Overall",
 ) -> go.Figure:
     """Generates a heatmap of the winrate for the given dataframe.
 
@@ -19,6 +20,7 @@ def heatmap(
             then NaN values will not be filled. Defaults to float.
         color (str): The color scheme to use for the heatmap. Defaults to
             "RdYlGn".
+        title_suffix (str): A suffix to add to the title. Defaults to "".
 
     Returns:
         go.Figure: Plotly figure of the heatmap.
@@ -52,8 +54,9 @@ def heatmap(
             texttemplate="%{text:,}",
         )
     )
+    title = "Winrate - " + title_suffix if title_suffix else "Winrate"
     fig.update_layout(
-        title_text="<i><b>Winrate</b></i>",
+        title_text=f"<i><b>{title}</b></i>",
         plot_bgcolor="white",
         xaxis_showgrid=False,
         yaxis_showgrid=False,
