@@ -423,7 +423,7 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
         Args:
             filename (str | list[str] | Path | list[Path]): The path to the JSON
-            file, or a list of paths to the JSON files.
+                file, or a list of paths to the JSON files.
 
         Returns:
             Self: The object tree.
