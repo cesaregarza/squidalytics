@@ -177,6 +177,9 @@ class SuperWeaponReference:
 
         Args:
             name (str): The attribute name.
+        
+        Raises:
+            AttributeError: If the attribute is not found in either class.
 
         Returns:
             Any: The attribute value.
