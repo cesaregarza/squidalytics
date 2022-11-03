@@ -417,13 +417,13 @@ class JSONDataClassListTopLevel(JSONDataClass):
         return self.traverse_tree(lambda x: x, drop_nones)
 
     @classmethod
-    def load(cls, filename: str | list[str]) -> Self:
+    def load(cls, filename: str | list[str] | Path | list[Path]) -> Self:
         """Load the object tree from a JSON file. If a list of filenames is
         provided, then load each file and return a list of the objects.
 
         Args:
-            filename (str | list[str]): The path to the JSON file, or a list of
-                paths to the JSON files.
+            filename (str | list[str] | Path | list[Path]): The path to the JSON
+                file, or a list of paths to the JSON files.
 
         Returns:
             Self: The object tree.
@@ -432,6 +432,8 @@ class JSONDataClassListTopLevel(JSONDataClass):
             return cls.__load_one(filename)
         jsons = []
         for file in filename:
+            if isinstance(file, Path):
+                file = str(file)
             jsons.append(cls.__load_one(file))
         return cls.concatenate(*jsons)
 

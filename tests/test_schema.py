@@ -293,6 +293,7 @@ class TestAnarchySchema:
         "weapon_id": "V2VhcG9uLTIwMjA=",
         "weapon_details": {
             "Name": "Splatterscope",
+            "Class": "Charger",
             "Range": 28.0,
             "SpecialPoint": 200,
             "Special": "Ink Vac",
