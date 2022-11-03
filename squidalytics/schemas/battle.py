@@ -511,6 +511,7 @@ class battleSchema(JSONDataClassListTopLevel):
     def winrate_heatmap(
         self,
         groupby_columns: list[str] | str = ["stage", "rule"],
+        filter_weapons: list[str] | str | None = None,
         mask_series: list[pd.Series] | pd.Series | None = None,
         mask_operation: str = "and",
         figure_title_suffix: str | None = None,
@@ -522,6 +523,8 @@ class battleSchema(JSONDataClassListTopLevel):
         Args:
             groupby_columns (list[str] | str | None): Columns by which to group
                 the data by. Defaults to ["stage", "rule"].
+            filter_weapons (list[str] | str | None): Weapons to filter the data
+                by. If None, no filtering is done. Defaults to None.
             mask_series (list[pd.Series] | pd.Series | None): Pandas Series to
                 apply on the given data before grouping. If a list of masks is
             mask_operation (str): The operation to apply on the masks. Only
@@ -536,6 +539,15 @@ class battleSchema(JSONDataClassListTopLevel):
             go.Figure: The resulting figure
         """
         df = self.to_pandas()
+        if filter_weapons is not None:
+            weapons_list, classes_list = WEAPON_MAP.parse_input(filter_weapons)
+            df = df.loc[df["weapon"].str.lower().isin(weapons_list)]
+
+            if figure_title_suffix is None:
+                figure_title_suffix = self.__figure_title_suffix(
+                    weapons_list, classes_list
+                )
+
         if isinstance(mask_series, list):
             mask_series = aggregate_masking(
                 *mask_series, operation=mask_operation
@@ -563,5 +575,30 @@ class battleSchema(JSONDataClassListTopLevel):
         )
         if not static:
             return fig
-        
+
         return fig.show(renderer="png")
+
+    def __figure_title_suffix(
+        self, weapons: list[str], classes: list[str]
+    ) -> str | None:
+        """Generate a figure title suffix for the given weapons.
+
+        Args:
+            weapons (list[str]): The weapons to generate a suffix for.
+            classes (list[str]): The classes to generate a suffix for.
+
+        Returns:
+            str | None: The figure title suffix. None if no input is given.
+        """
+        weapons = [x.capitalize() for x in weapons]
+        classes = [x.capitalize() for x in classes]
+        if len(classes) > 0 and len(classes) < 3:
+            return f"{', '.join(classes)}"
+        elif len(classes) > 0 and len(classes) >= 3:
+            return f"{len(classes)} classes"
+        elif len(weapons) > 0 and len(weapons) < 3:
+            return f"{', '.join(weapons)}"
+        elif len(weapons) > 0 and len(weapons) >= 3:
+            return f"{len(weapons)} weapons"
+        else:
+            return None

@@ -66,7 +66,7 @@ def get_coop_weapons() -> list[dict]:
     return [x for x in weapon_data if x.get("Type", None) == "Coop"]
 
 
-def map_localized_names(weapon_data: list[dict]) -> list[dict]:
+def map_localized_names(weapon_data: list[dict[str, str]]) -> list[dict]:
     language_data = get_language_data()
     special_regex = re.compile(
         r"(?<=Work\/Gyml\/).*(?=\.spl__WeaponInfoSpecial\.gyml)"
@@ -74,6 +74,7 @@ def map_localized_names(weapon_data: list[dict]) -> list[dict]:
     sub_regex = re.compile(r"(?<=Work\/Gyml\/).*(?=\.spl__WeaponInfoSub\.gyml)")
     for weapon in weapon_data:
         weapon["Name"] = localize(language_data, weapon["__RowId"])
+        weapon["Class"] = weapon["__RowId"].split("_")[0]
         special = special_regex.search(weapon["SpecialWeapon"]).group(0)
         sub = sub_regex.search(weapon["SubWeapon"]).group(0)
         weapon["Special"] = localize(language_data, special)
@@ -89,7 +90,15 @@ def get_versus_weapons_simplified() -> WeaponsMap:
         dic = {
             k: v
             for k, v in weapon.items()
-            if k in ["Name", "Special", "Sub", "Range", "SpecialPoint"]
+            if k
+            in [
+                "Name",
+                "Special",
+                "Sub",
+                "Range",
+                "SpecialPoint",
+                "Class",
+            ]
         }
         out[dic["Name"]] = dic
     return out
