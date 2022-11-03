@@ -1,9 +1,10 @@
 import json
 import re
+from functools import cache
 from typing import TypeAlias
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, ResultSet
 
 RAW_URL = "https://raw.githubusercontent.com/"
 VERSION_URL = (
@@ -14,6 +15,28 @@ LANG_URL = "Leanny/leanny.github.io/master/splat3/data/language/"
 WeaponsMap: TypeAlias = dict[str, dict[str, str | float]]
 
 
+@cache
+def enumerate_versions(return_soup: bool = False) -> list[str] | ResultSet:
+    """Get a list of all the versions of the datamine. If return_soup is True,
+    return the BeautifulSoup ResultSet instead.
+
+    Args:
+        return_soup (bool): Whether to return the BeautifulSoup ResultSet. If
+            False, return a list of the versions. Defaults to False.
+
+    Returns:
+        list[str] | ResultSet: The versions of the datamine.
+    """
+    page = requests.get(VERSION_URL)
+    soup = BeautifulSoup(page.content, "html.parser")
+    versions = soup.find_all("a", class_="js-navigation-open Link--primary")
+    if return_soup:
+        return versions
+    versions_text = [version.text for version in versions]
+    return versions_text
+
+
+@cache
 def get_version_url(version: str | None = None) -> str:
     """Get the URL for the specified version of the datamine. If no version is
     specified, get the latest version.
@@ -25,9 +48,7 @@ def get_version_url(version: str | None = None) -> str:
     Returns:
         str: The URL for the specified version.
     """
-    page = requests.get(VERSION_URL)
-    soup = BeautifulSoup(page.content, "html.parser")
-    versions = soup.find_all("a", class_="js-navigation-open Link--primary")
+    versions = enumerate_versions(return_soup=True)
     versions_text = [(version.text, i) for i, version in enumerate(versions)]
     if version is None:
         versions_text.sort(key=lambda x: x[0])
@@ -43,6 +64,7 @@ def get_version_url(version: str | None = None) -> str:
     return out_url
 
 
+@cache
 def get_weapon_data(version: str | None = None) -> dict:
     """Get the weapon data from the specified version of the datamine. If no
     version is specified, get the latest version.
@@ -60,6 +82,7 @@ def get_weapon_data(version: str | None = None) -> dict:
     return json_data
 
 
+@cache
 def get_language_data(lang: str = "USen") -> dict:
     """Get the language data for the specified language.
 
@@ -99,6 +122,7 @@ def localize(language_data: dict, key: str) -> str:
     return language_data[SPECIAL_KEY][key]
 
 
+@cache
 def get_versus_weapons(version: str | None = None) -> list[dict]:
     """Get the versus weapons from the specified version of the datamine. If no
     version is specified, get the latest version.
@@ -114,6 +138,7 @@ def get_versus_weapons(version: str | None = None) -> list[dict]:
     return [x for x in weapon_data if x.get("Type", None) == "Versus"]
 
 
+@cache
 def get_coop_weapons(version: str | None = None) -> list[dict]:
     """Get the co-op weapons from the specified version of the datamine. If no
     version is specified, get the latest version.
@@ -158,6 +183,7 @@ def map_localized_names(
     return weapon_data
 
 
+@cache
 def get_versus_weapons_simplified(
     version: str | None = None, lang: str = "USen"
 ) -> WeaponsMap:
