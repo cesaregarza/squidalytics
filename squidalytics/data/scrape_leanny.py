@@ -39,7 +39,8 @@ def enumerate_versions(return_soup: bool = False) -> list[str] | ResultSet:
 @cache
 def get_version_url(version: str | None = None) -> str:
     """Get the URL for the specified version of the datamine. If no version is
-    specified, get the latest version.
+    specified, get the latest version. If the version is not found, return the
+    previous version.
 
     Args:
         version (str | None): The version to get the URL for. If None, get the
@@ -50,14 +51,15 @@ def get_version_url(version: str | None = None) -> str:
     """
     versions = enumerate_versions(return_soup=True)
     versions_text = [(version.text, i) for i, version in enumerate(versions)]
+    versions_text.sort(key=lambda x: x[0])
     if version is None:
-        versions_text.sort(key=lambda x: x[0])
         selected_version_idx = versions_text[-1][1]
     else:
         version = version.replace("v", "").replace(".", "")
-        selected_version_idx = [x[1] for x in versions_text if x[0] == version][
-            0
-        ]
+        # Leanny's datamine does not include changes that do not affect gameplay
+        # such as bug fixes, so we get the highest version that is less than or
+        # equal to the specified version.
+        selected_version_idx = [i for v, i in versions_text if v <= version][-1]
     selected_version_soup = versions[selected_version_idx]
     out_url: str = RAW_URL + selected_version_soup["href"]
     out_url = out_url.replace("/tree", "")

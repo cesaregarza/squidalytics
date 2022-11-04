@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import datetime
+from functools import cached_property
 from typing import Any
 
 import numpy as np
@@ -183,8 +185,12 @@ class playerFullSchema(playerSchema):
     weapon: weaponSchema
     result: resultSchema = None
 
-    def summary(self) -> dict:
+    def summary(self, version: str | None = None) -> dict:
         """Return a summary of the player's battle stats.
+
+        Args:
+            version (str | None, optional): The version of the game to use for
+                the weapon details. Defaults to None.
 
         Returns:
             dict: A dictionary of the player's stats.
@@ -197,7 +203,7 @@ class playerFullSchema(playerSchema):
             "species": self.species,
             "paint": self.paint,
         }
-        out["weapon_details"] = self.weapon_details
+        out["weapon_details"] = self.weapon_details(version=version)
         if self.result:
             append = {
                 "elimination": self.result.kill,
@@ -217,9 +223,10 @@ class playerFullSchema(playerSchema):
         out.update(append)
         return out
 
-    @property
-    def weapon_details(self) -> dict:
-        return WEAPON_MAP.versus_weapons[self.weapon.name]
+    def weapon_details(self, version: str | None = None) -> dict:
+        if version is None:
+            return WEAPON_MAP.versus_weapons[self.weapon.name]
+        return WEAPON_MAP[version].versus_weapons[self.weapon.name]
 
 
 @dataclass(repr=False)
@@ -255,19 +262,23 @@ class teamSchema(JSONDataClass):
         else:
             return 0
 
-    def player_summary(self, detailed: bool = False) -> list[dict[str, Any]]:
+    def player_summary(
+        self, detailed: bool = False, version: str | None = None
+    ) -> list[dict[str, Any]]:
         """Get a summary of the team's players.
 
         Args:
             detailed (bool): Whether to include detailed information about the
                 player. Defaults to False.
+            version (str | None, optional): The version of the game to use for
+                the weapon details. Defaults to None.
 
         Returns:
             list[dict]: A list of dictionaries containing the player's stats.
         """
         out: list[dict[str, Any]] = []
         for player in self.players:
-            out.append(player.summary())
+            out.append(player.summary(version=version))
         if not detailed:
             return out
         # Add additional information if detailed is True.
@@ -288,7 +299,10 @@ class teamSchema(JSONDataClass):
         return out
 
     def team_summary(
-        self, player_summaries: list[dict] | None = None, detailed: bool = False
+        self,
+        player_summaries: list[dict] | None = None,
+        detailed: bool = False,
+        version: str | None = None,
     ) -> dict:
         """Get an overall summary of the team.
 
@@ -299,12 +313,16 @@ class teamSchema(JSONDataClass):
                 Defaults to None.
             detailed (bool): Whether to include detailed information about the
                 team. Defaults to False.
+            version (str | None, optional): The version of the game to use for
+                the weapon details. Defaults to None.
 
         Returns:
             dict: A dictionary of team statistics.
         """
         if player_summaries is None:
-            player_summaries = [player.summary() for player in self.players]
+            player_summaries = [
+                player.summary(version=version) for player in self.players
+            ]
         team_total = {
             "kill": sum(player["kill"] for player in player_summaries),
             "death": sum(player["death"] for player in player_summaries),
@@ -384,7 +402,9 @@ class vsHistoryDetailSchema(JSONDataClass):
         Returns:
             dict: A dictionary of the user's team's stats.
         """
-        players_summary = self.myTeam.player_summary(detailed=detailed)
+        players_summary = self.myTeam.player_summary(
+            detailed=detailed, version=self.version
+        )
         for player in players_summary:
             if player["name"] == self.player.full_name:
                 return player
@@ -409,18 +429,38 @@ class vsHistoryDetailSchema(JSONDataClass):
             "knockout": self.knockout,
             "duration": self.duration,
             "played_time": self.playedTime,
+            "version": self.version,
             "my_stats": self.my_stats(),
-            "my_team": self.myTeam.player_summary(detailed=True),
+            "my_team": self.myTeam.player_summary(
+                detailed=True, version=self.version
+            ),
             "other_teams": [
-                team.player_summary(detailed=True) for team in self.otherTeams
+                team.player_summary(detailed=True, version=self.version)
+                for team in self.otherTeams
             ],
             "awards": self.count_awards(),
-            "my_team_stats": self.myTeam.team_summary(detailed=detailed),
+            "my_team_stats": self.myTeam.team_summary(
+                detailed=detailed, version=self.version
+            ),
             "other_team_stats": [
-                team.team_summary(detailed=detailed) for team in self.otherTeams
+                team.team_summary(detailed=detailed, version=self.version)
+                for team in self.otherTeams
             ],
         }
         return out
+
+    @cached_property
+    def version(self) -> str:
+        return map_date_to_version(self.played_time_dt)
+
+    @cached_property
+    def played_time_dt(self) -> datetime:
+        """Get the time the match was played as a datetime object.
+
+        Returns:
+            datetime: The time the match was played.
+        """
+        return datetime.strptime(self.playedTime, "%Y-%m-%dT%H:%M:%SZ")
 
 
 @dataclass(repr=False)
@@ -507,7 +547,7 @@ class battleSchema(JSONDataClassListTopLevel):
         df["played_time"] = pd.to_datetime(df["played_time"])
         df["duration"] = pd.to_timedelta(df["duration"], "s")
         df["end_time"] = df["played_time"] + df["duration"]
-        df["version"] = df["played_time"].map(map_date_to_version)
+        # df["version"] = df["played_time"].map(map_date_to_version)
         return df
 
     def winrate_heatmap(

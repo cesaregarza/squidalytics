@@ -334,6 +334,7 @@ class TestAnarchySchema:
         "knockout": "NEITHER",
         "duration": 300,
         "played_time": "2022-10-04T06:30:14Z",
+        "version": "1.1.2",
         "weapon": "Splatterscope",
         "paint": 1073,
         "elimination": 8,
