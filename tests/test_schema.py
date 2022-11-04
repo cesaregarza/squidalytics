@@ -511,10 +511,11 @@ class TestAnarchySchema:
     @pytest.mark.internet
     def test_to_pandas(self, anarchy_loaded: battleSchema) -> None:
         df = anarchy_loaded.to_pandas()
-        assert df.shape == (1, 34)
+        assert df.shape == (1, 35)
         assert isinstance(df.loc[0, "played_time"], pd.Timestamp)
         assert isinstance(df.loc[0, "duration"], pd.Timedelta)
         assert isinstance(df.loc[0, "end_time"], pd.Timestamp)
+        assert isinstance(df.loc[0, "version"], str)
         assert df.loc[0, "played_time"] < df.loc[0, "end_time"]
 
     @pytest.mark.internet

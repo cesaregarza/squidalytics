@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 
 from squidalytics.analytics.plots.heatmap import heatmap
 from squidalytics.constants import ABILITIES, ALL_ABILITIES, WEAPON_MAP
+from squidalytics.data.scrape_version_releases import map_date_to_version
 from squidalytics.schemas.base import JSONDataClass, JSONDataClassListTopLevel
 from squidalytics.schemas.general import (
     colorSchema,
@@ -506,6 +507,7 @@ class battleSchema(JSONDataClassListTopLevel):
         df["played_time"] = pd.to_datetime(df["played_time"])
         df["duration"] = pd.to_timedelta(df["duration"], "s")
         df["end_time"] = df["played_time"] + df["duration"]
+        df["version"] = df["played_time"].map(map_date_to_version)
         return df
 
     def winrate_heatmap(
