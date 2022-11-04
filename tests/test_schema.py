@@ -516,3 +516,12 @@ class TestAnarchySchema:
         assert isinstance(df.loc[0, "duration"], pd.Timedelta)
         assert isinstance(df.loc[0, "end_time"], pd.Timestamp)
         assert df.loc[0, "played_time"] < df.loc[0, "end_time"]
+
+    @pytest.mark.internet
+    def test_winrate_heatmap(self, anarchy_loaded: battleSchema) -> None:
+        # Cannot meaningfully test this, so just make sure it runs
+        anarchy_loaded.winrate_heatmap()
+        anarchy_loaded.winrate_heatmap(
+            ["stage", "rule"],
+            filter_weapons=["Shooter", "Splatterscope"],
+        )
