@@ -123,7 +123,7 @@ unicode_backport = ["unicodedata2"]
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -134,7 +134,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "colorama"
 version = "0.4.5"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -876,7 +876,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "f6b2c688c5f7ba17b35abf1fa0538a6e8aa1f624cad30385fa8bc91ebde0f7f0"
+content-hash = "d085b77be3422bea53635d853f46b3cf2573424da03be351afedd195a440a0b1"
 
 [metadata.files]
 appnope = [
