@@ -550,6 +550,30 @@ class battleSchema(JSONDataClassListTopLevel):
         # df["version"] = df["played_time"].map(map_date_to_version)
         return df
 
+    @staticmethod
+    def filter_weapons(
+        df: pd.DataFrame, weapons: list[str] | str, include: bool = True
+    ) -> tuple[pd.DataFrame, list[str], list[str]]:
+        """Filter the DataFrame by the given weapons.
+
+        Args:
+            df (pd.DataFrame): The DataFrame to filter.
+            weapons (list[str] | str): The weapons or classes to filter by.
+            include (bool): Whether to include or exclude the given weapons.
+                Defaults to True.
+
+        Returns:
+            tuple
+                pd.DataFrame: The filtered DataFrame.
+                list[str]: The weapons that were filtered out.
+                list[str]: The weapon classes that were filtered out.
+        """
+        weapons_list, classes_list = WEAPON_MAP.parse_input(weapons)
+        mask = df["weapon"].str.lower().isin(weapons_list)
+        mask = mask if include else ~mask
+        df = df.loc[mask]
+        return df, weapons_list, classes_list
+
     def winrate_heatmap(
         self,
         groupby_columns: list[str] | str = ["stage", "rule"],
@@ -582,8 +606,9 @@ class battleSchema(JSONDataClassListTopLevel):
         """
         df = self.to_pandas()
         if filter_weapons is not None:
-            weapons_list, classes_list = WEAPON_MAP.parse_input(filter_weapons)
-            df = df.loc[df["weapon"].str.lower().isin(weapons_list)]
+            df, weapons_list, classes_list = self.filter_weapons(
+                df, filter_weapons
+            )
 
             if figure_title_suffix is None:
                 figure_title_suffix = self.__figure_title_suffix(
