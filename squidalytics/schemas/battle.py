@@ -547,7 +547,6 @@ class battleSchema(JSONDataClassListTopLevel):
         df["played_time"] = pd.to_datetime(df["played_time"])
         df["duration"] = pd.to_timedelta(df["duration"], "s")
         df["end_time"] = df["played_time"] + df["duration"]
-        # df["version"] = df["played_time"].map(map_date_to_version)
         return df
 
     @staticmethod
