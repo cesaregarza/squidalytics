@@ -9,6 +9,7 @@ from typing_extensions import Self
 
 from squidalytics.cli.argparsers import (
     load_argparser,
+    summary_argparser,
     to_clipboard_argparser,
     to_pandas_argparser,
 )
