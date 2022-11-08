@@ -397,6 +397,9 @@ class JSONDataClassListTopLevel(JSONDataClass):
 
         return attr_func
 
+    def __len__(self) -> int:
+        return len(self.data)
+
     def traverse_tree(
         self, func: Callable[[Any], Any], prune_none: bool = False
     ) -> None:
