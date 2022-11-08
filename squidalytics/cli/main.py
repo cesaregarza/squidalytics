@@ -2,8 +2,7 @@ import os
 from typing import Callable, ParamSpec, TypeVar
 
 import cmd2
-import pandas as pd
-import tabulate
+import visidata
 from colorama import Fore, Style, just_fix_windows_console
 from typing_extensions import Self
 
@@ -37,14 +36,12 @@ class MainShell(cmd2.Cmd):
         + "Splatoon 3"
         + Style.RESET_ALL
         + " battle data!\n"
-        + "Please enter a command to get"
-        + " started or type "
+        + "Please enter a command to get started or type "
         + Fore.YELLOW
         + BOLD
         + "help"
         + Style.RESET_ALL
-        + " for a list "
-        + "of commands."
+        + " for a list of commands."
     )
     prompt = ">"
     battle_schema = None
@@ -57,7 +54,10 @@ class MainShell(cmd2.Cmd):
         @cmd2.with_category("Battle Data")
         def wrapper(self: Self, *args: P.args, **kwargs: P.kwargs) -> T:
             if not self.battle_schema:
-                self.print_error("No battle schema loaded.")
+                self.print_error(
+                    'No battle schema loaded. Use the "load" command to load'
+                    + "a battle schema."
+                )
                 return
             return func(self, *args, **kwargs)
 
@@ -69,45 +69,8 @@ class MainShell(cmd2.Cmd):
     def print_error(self, msg: str) -> None:
         self.poutput(BOLD + Fore.RED + "ERROR: " + Style.RESET_ALL + msg)
 
-    def print_dataframe(self, df, **kwargs) -> None:
-        width = os.get_terminal_size().columns
-        pd.set_option("display.width", width)
-        pd.set_option("display.max_colwidth", 20)
-        table = tabulate.tabulate(
-            df,
-            df.columns,
-            showindex=False,
-            tablefmt="pretty",
-        )
-        self.poutput(table)
-
-    @staticmethod
-    def format_dataframe_for_terminal(df: pd.DataFrame) -> pd.DataFrame:
-        """Formats a dataframe for printing in the terminal."""
-        df = df.copy()
-        # Format datetimes for printing.
-        dt_cols = df.select_dtypes(include="datetime64[ns, UTC]").columns
-        df.loc[:, dt_cols] = df.loc[:, dt_cols].applymap(
-            lambda dt: dt.strftime("%Y-%m-%d %H:%M:%S")
-        )
-        # Format timedeltas for printing.
-        td_cols = df.select_dtypes(include="timedelta64[ns]").columns
-
-        def format_timedelta(td: pd.Timedelta) -> str:
-            minutes, seconds = divmod(td.seconds, 60)
-            return f"{minutes}m:{seconds:02}s"
-
-        df.loc[:, td_cols] = df.loc[:, td_cols].applymap(format_timedelta)
-
-        # Truncate long strings.
-        str_cols = df.select_dtypes(include="string").columns
-        df.loc[:, str_cols] = df.loc[:, str_cols].applymap(
-            lambda s: s[:20] + "..." if len(s) > 20 else s
-        )
-        # apply max precision to floats
-        float_cols = df.select_dtypes(include="float").columns
-        df.loc[:, float_cols] = df.loc[:, float_cols].round(2)
-        return df
+    def viz_dataframe(self, df, **kwargs) -> None:
+        visidata.run(visidata.PandasSheet("pandas", source=df))
 
     @cmd2.with_category("Battle Data")
     @cmd2.with_argparser(load_argparser)
@@ -166,8 +129,8 @@ class MainShell(cmd2.Cmd):
             df = df.tail(opts.last)
 
         if opts.output == "stdout":
-            df = self.format_dataframe_for_terminal(df)
-            self.print_dataframe(df)
+            df = df.squidalytics.format_for_cli()
+            self.viz_dataframe(df)
             return
         elif opts.output == "clipboard":
             df.to_clipboard(sep=opts.delimiter)
