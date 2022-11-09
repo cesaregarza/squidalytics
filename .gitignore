@@ -151,3 +151,4 @@ input_files
 !tests/input_files
 *.json
 !tests/input_files/*.json
+*.html
