@@ -3,6 +3,7 @@ import time
 from typing import Callable, ParamSpec, TypeVar
 
 import cmd2
+import pandas as pd
 import visidata
 from colorama import Fore, Style, just_fix_windows_console
 from typing_extensions import Self
@@ -11,7 +12,7 @@ from squidalytics.cli.argparsers import (
     load_argparser,
     summary_argparser,
     to_clipboard_argparser,
-    to_pandas_argparser,
+    view_argparser,
 )
 from squidalytics.schemas import battleSchema
 
@@ -70,7 +71,7 @@ class MainShell(cmd2.Cmd):
     def print_error(self, msg: str) -> None:
         self.poutput(BOLD + Fore.RED + "ERROR: " + Style.RESET_ALL + msg)
 
-    def viz_dataframe(self, df) -> None:
+    def viz_dataframe(self, df: pd.DataFrame) -> None:
         self.poutput(
             "Opening data in VisiData in 3 seconds. Press "
             + Fore.YELLOW
@@ -85,6 +86,14 @@ class MainShell(cmd2.Cmd):
                 end="\r",
             )
             time.sleep(1)
+        self.show_viz(df)
+
+    def show_viz(self, df: pd.DataFrame) -> None:
+        """A convenience method to run the VisiData visualization.
+
+        Args:
+            df (pd.DataFrame): The dataframe to visualize.
+        """
         visidata.run(visidata.PandasSheet("pandas", source=df))
 
     @cmd2.with_category("Battle Data")
@@ -128,10 +137,10 @@ class MainShell(cmd2.Cmd):
         self.battle_schema.to_pandas(opts.all).to_clipboard(sep=opts.delimiter)
         self.poutput("Battle schema copied to clipboard.")
 
-    @cmd2.with_argparser(to_pandas_argparser)
+    @cmd2.with_argparser(view_argparser)
     @loaded_method
-    def do_to_pandas(self, opts) -> None:
-        """Converts the battle schema to a pandas dataframe."""
+    def do_view(self, opts) -> None:
+        """Converts the battle schema to a viewable dataframe."""
         df = self.battle_schema.to_pandas(opts.all)
         if (opts.include is not None) and (len(opts.include) > 0):
             df, _, _ = battleSchema.filter_weapons(df, opts.include)
@@ -147,7 +156,7 @@ class MainShell(cmd2.Cmd):
             df = df.tail(opts.last)
 
         if opts.output == "stdout":
-            df = df.squidalytics.format_for_cli()
+            df: pd.DataFrame = df.squidalytics.format_for_cli()
             self.viz_dataframe(df)
             return
         elif opts.output == "clipboard":

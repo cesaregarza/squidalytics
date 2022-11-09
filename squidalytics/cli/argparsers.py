@@ -31,14 +31,14 @@ to_clipboard_argparser.add_argument(
     help="The delimiter to use when copying to the clipboard.",
 )
 
-to_pandas_argparser = Cmd2ArgumentParser()
-to_pandas_argparser.add_argument(
+view_argparser = Cmd2ArgumentParser()
+view_argparser.add_argument(
     "-a",
     "--all",
     action="store_true",
     help="Include detailed information about each battle.",
 )
-to_pandas_argparser.add_argument(
+view_argparser.add_argument(
     "-i",
     "--include",
     nargs="+",
@@ -47,20 +47,20 @@ to_pandas_argparser.add_argument(
         + "the data."
     ),
 )
-to_pandas_argparser.add_argument(
+view_argparser.add_argument(
     "-x",
     "--exclude",
     nargs="+",
     help="Weapons and weapon classes by which to filter the data.",
 )
-to_pandas_argparser.add_argument(
+view_argparser.add_argument(
     "-l",
     "--last",
     type=int,
     default=0,
     help="The number of battles to show.",
 )
-to_pandas_argparser.add_argument(
+view_argparser.add_argument(
     "-o",
     "--output",
     default="stdout",
@@ -70,7 +70,7 @@ to_pandas_argparser.add_argument(
         + "clipboard. Otherwise, the argument will be treated as a file path."
     ),
 )
-to_pandas_argparser.add_argument(
+view_argparser.add_argument(
     "-d",
     "--delimiter",
     default="\t",
@@ -79,7 +79,7 @@ to_pandas_argparser.add_argument(
         + "file."
     ),
 )
-to_pandas_argparser.add_argument(
+view_argparser.add_argument(
     "-f",
     "--force",
     action="store_true",
