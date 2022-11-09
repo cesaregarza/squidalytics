@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Callable, ParamSpec, TypeVar
 
 import cmd2
@@ -43,7 +44,7 @@ class MainShell(cmd2.Cmd):
         + Style.RESET_ALL
         + " for a list of commands."
     )
-    prompt = ">"
+    prompt = "[" + Fore.RED + BOLD + "UNLOADED" + Style.RESET_ALL + "]> "
     battle_schema = None
 
     def postloop(self) -> None:
@@ -69,7 +70,21 @@ class MainShell(cmd2.Cmd):
     def print_error(self, msg: str) -> None:
         self.poutput(BOLD + Fore.RED + "ERROR: " + Style.RESET_ALL + msg)
 
-    def viz_dataframe(self, df, **kwargs) -> None:
+    def viz_dataframe(self, df) -> None:
+        self.poutput(
+            "Opening data in VisiData in 3 seconds. Press "
+            + Fore.YELLOW
+            + BOLD
+            + "Q"
+            + Style.RESET_ALL
+            + " to quit."
+        )
+        for i in range(3):
+            self.poutput(
+                " " + Fore.YELLOW + BOLD + str(3 - i) + Style.RESET_ALL,
+                end="\r",
+            )
+            time.sleep(1)
         visidata.run(visidata.PandasSheet("pandas", source=df))
 
     @cmd2.with_category("Battle Data")
@@ -101,6 +116,9 @@ class MainShell(cmd2.Cmd):
             + str(len(files))
             + Style.RESET_ALL
             + f" file{'s' if len(files) > 1 else ''}."
+        )
+        self.prompt = (
+            "[" + Fore.GREEN + BOLD + " LOADED " + Style.RESET_ALL + "]> "
         )
 
     @cmd2.with_argparser(to_clipboard_argparser)
