@@ -18,6 +18,7 @@ colorama = "^0.4.6"
 cmd2 = "^2.4.2"
 tabulate = "^0.9.0"
 visidata = "^2.10.2"
+networkx = "^3.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"
