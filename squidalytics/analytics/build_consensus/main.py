@@ -1,11 +1,12 @@
-import numpy as np
-import pandas as pd
 import networkx as nx
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
 
 from squidalytics.constants import ABILITIES, PRIMARY_ONLY
 
 
-def bin_abilities(abilities: dict[str, int], bin_size: int) -> set[str]:
+def bin_abilities(abilities: dict[str, int], bin_size: int = 10) -> set[str]:
     """Bin abilities into bins of size `bin_size`. Main Slot Only abilities are
     not binned.
 
@@ -13,7 +14,7 @@ def bin_abilities(abilities: dict[str, int], bin_size: int) -> set[str]:
         abilities (dict[str, int]): A dictionary containing the ability name
             and the number of ability points.
 
-        bin_size (int): The size of the bins.
+        bin_size (int): The size of the bins. Defaults to 10.
 
     Raises:
         ValueError: If an invalid ability is passed.
@@ -41,66 +42,54 @@ def bin_abilities(abilities: dict[str, int], bin_size: int) -> set[str]:
     return out
 
 
-def generate_base_matrix(abilities: set[str]) -> pd.DataFrame:
-    """Generate a base matrix for the given abilities. This matrix will have
-    the given abilities as columns and rows, and will be filled with zeros.
-    This should be used as a starting point for building a consensus matrix.
-
-    Args:
-        abilities (set[str]): A set of abilities.
-
-    Returns:
-        pd.DataFrame: A base matrix with the given abilities as columns and
-            rows.
-    """
-    abilities_as_list = list(abilities)
-
-    return pd.DataFrame(
-        index=abilities_as_list, columns=abilities_as_list, data=0
-    )
-
-
 def generate_adjacency_matrix(
-    abilities: set[str], base_matrix: pd.DataFrame
-) -> pd.DataFrame:
+    abilities: set[str], all_abilities: list[str]
+) -> np.ndarray:
     """Generate an adjacency matrix for the given abilities. This matrix will
-    have the given abilities as columns and rows, and will be filled with
-    zeros. This should be used as a starting point for building a consensus
-    matrix. This will include self-adjacency, as it is assumed that the
-    consensus graph will remove self-adjacency. Additionally, the self-adjacency
-    can be used to determine the number of builds that have a given ability.
+    have the abilities from the given set as columns and rows and will be filled
+    with ones for connected abilities and zeros for unconnected abilities. This
+    matrix should be used as a starting point for building a consensus matrix.
+    This will include self-adjacency, as it is assumed that the consensus graph
+    will remove self-adjacency. Additionally, the self-adjacency can be used to
+    determine the number of builds that have a given ability.
 
     Args:
-        abilities (set[str]): A set of abilities.
-
-        base_matrix (pd.DataFrame): A base matrix with the given abilities as
-            columns and rows.
+        abilities (set[str]): A set of abilities to be included in the adjacency
+            matrix.
+        all_abilities (list[str]): A list of all abilities, used for determining
+            the index of each ability in the matrix.
 
     Returns:
-        pd.DataFrame: An adjacency matrix with the given abilities as columns
-            and rows.
+        np.ndarray: An adjacency matrix with the abilities from the given set as
+            columns and rows, filled with ones for connected abilities and zeros
+            for unconnected abilities.
     """
-    abilities_as_list = list(abilities)
-    out_matrix = base_matrix.copy()
-
-    for ability_1 in abilities_as_list:
-        for ability_2 in abilities_as_list:
-            out_matrix.loc[ability_1, ability_2] = 1
-
-    return out_matrix
+    num_abilities = len(all_abilities)
+    adjacency_matrix = np.zeros((num_abilities, num_abilities), dtype=np.int64)
+    abilities_list = list(abilities)
+    for i in range(len(abilities_list)):
+        for j in range(len(abilities_list)):
+            ability_i_idx = all_abilities.index(abilities_list[i])
+            ability_j_idx = all_abilities.index(abilities_list[j])
+            adjacency_matrix[ability_i_idx, ability_j_idx] = 1
+            adjacency_matrix[ability_j_idx, ability_i_idx] = 1
+    return adjacency_matrix
 
 
 def generate_consensus_matrix(
-    matrices: list[pd.DataFrame],
+    matrices: list[npt.NDArray[np.int64]],
     weights: pd.Series | np.ndarray | list[float | int] | None = None,
-) -> pd.DataFrame:
-    """Generate a consensus matrix from a list of matrices. The matrices must
-    have the same shape, and the weights must be the same length as the list of
-    matrices. If the weights are None, all matrices will be weighted equally.
+) -> np.ndarray:
+    """
+    Generate a consensus matrix from a list of adjacency matrices. The matrices
+    must have the same shape, and the weights must be the same length as the
+    list of matrices. If the weights are None, all matrices will be weighted
+    equally.
 
     Args:
-        matrices (list[pd.DataFrame]): A list of matrices to be used to generate
-            the consensus matrix. These matrices must have the same shape.
+        matrices (list[npt.NDArray[np.int64]]): A list of adjacency matrices to
+            be used to generate the consensus matrix. These matrices must have
+            the same shape.
         weights (pd.Series | np.ndarray | list[float | int] | None): A vector of
             weights to be applied to each matrix. Inputs will be converted to a
             np.ndarray. If None, all matrices will be weighted equally. Defaults
@@ -111,11 +100,10 @@ def generate_consensus_matrix(
             values, or None.
 
     Returns:
-        pd.DataFrame: A consensus matrix.
+        np.ndarray: A consensus matrix computed as the weighted sum of the input
+            matrices.
     """
-
-    adjacency_tensor = np.array([matrix.values for matrix in matrices])
-
+    adjacency_tensor = np.stack(matrices, axis=0)
 
     if weights is None:
         weights_vector = np.ones(len(matrices))
@@ -134,14 +122,7 @@ def generate_consensus_matrix(
     # Use einsum to multiply the (n, m, m) tensor by the (n, ) weights vector,
     # which is equivalent to multiplying each matrix by its weight and then
     # summing them together
-    aggregate_matrix = np.einsum("ijk,i->jk", adjacency_tensor, weights_vector)
-
-    # Put the aggregate matrix, whose shape is now (m, m), into a dataframe
-    return pd.DataFrame(
-        aggregate_matrix,
-        index=matrices[0].index,
-        columns=matrices[0].columns,
-    )
+    return np.einsum("ijk,i->jk", adjacency_tensor, weights_vector)
 
 
 def calculate_width_by_connection(
@@ -168,6 +149,6 @@ def calculate_width_by_connection(
     if logarithmic:
         # Add 1 to the width to avoid taking the log of 0 and to avoid
         # negative widths
-        return [multiplier * np.log(width + 1) for width in base_widths]
+        return [multiplier * np.log(width + 1) for width in altered_widths]
     else:
-        return [multiplier * width for width in base_widths]
+        return [multiplier * width for width in altered_widths]

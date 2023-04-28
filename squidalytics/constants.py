@@ -196,6 +196,3 @@ class SuperWeaponReference:
                 "Neither SuperWeaponReference nor WeaponReference have an "
                 f"attribute named '{name}'."
             )
-
-
-WEAPON_MAP = SuperWeaponReference()
