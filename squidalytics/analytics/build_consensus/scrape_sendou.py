@@ -111,10 +111,10 @@ def get_builds_data(builds: list[bs4.element.Tag]) -> list[dict]:
     return builds_data
 
 
-def bin_builds(builds: list[dict]) -> list[dict]:
+def bin_builds(builds: list[dict], bin_size: int = 10) -> list[dict]:
     return [
         {
-            k: v if k != "abilities" else bin_abilities(v)
+            k: v if k != "abilities" else bin_abilities(v, bin_size)
             for k, v in build.items()
         }
         for build in builds
@@ -154,3 +154,46 @@ def scrape_sendou_builds(
     all_abilities = get_all_abilities(builds_data)
     builds_data = assign_adjacency_matrix(builds_data, all_abilities)
     return builds_data
+
+
+def restrict_player_influence(builds: list[dict]) -> list[float]:
+    # Count the number of builds submitted by each player.
+    counter = {}
+    for build in builds:
+        author = build["author"]
+        counter["author"] = counter.get(author, 0) + 1
+
+    # Calculate the weight for each build.
+    weights = []
+    for build in builds:
+        author = build["author"]
+        weights.append(1 / counter[author])
+
+    return weights
+
+
+def plus_influence(
+    builds: list[dict],
+    base_multiplier: float = 1.0,
+    plus_multiplier: float = 1.2,
+) -> list[float]:
+    weights = []
+    for build in builds:
+        plus = build["plus"]
+        weights.append(base_multiplier * plus_multiplier**plus)
+    return weights
+
+
+def modes_filter(
+    builds: list[dict], modes: list[str], invert: bool = False
+) -> list[float]:
+    weights = []
+    value_if_true = 1 if not invert else 0
+    value_if_false = 0 if not invert else 1
+    for build in builds:
+        build_modes = build["modes"]
+        if any(mode in build_modes for mode in modes):
+            weights.append(value_if_true)
+        else:
+            weights.append(value_if_false)
+    return weights

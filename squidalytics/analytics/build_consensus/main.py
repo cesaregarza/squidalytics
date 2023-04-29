@@ -68,7 +68,7 @@ def generate_adjacency_matrix(
     adjacency_matrix = np.zeros((num_abilities, num_abilities), dtype=np.int64)
     abilities_list = list(abilities)
     for i in range(len(abilities_list)):
-        for j in range(len(abilities_list)):
+        for j in range(i, len(abilities_list)):
             ability_i_idx = all_abilities.index(abilities_list[i])
             ability_j_idx = all_abilities.index(abilities_list[j])
             adjacency_matrix[ability_i_idx, ability_j_idx] = 1
@@ -77,7 +77,7 @@ def generate_adjacency_matrix(
 
 
 def generate_consensus_matrix(
-    matrices: list[npt.NDArray[np.int64]],
+    matrices: list[npt.NDArray[np.int64]] | npt.NDArray[np.int64],
     weights: pd.Series | np.ndarray | list[float | int] | None = None,
 ) -> np.ndarray:
     """
@@ -96,6 +96,9 @@ def generate_consensus_matrix(
             to None.
 
     Raises:
+        ValueError: If matrices is a numpy array and the shape is not (n, m, m).
+        TypeError: If the matrices are not a list of matrices or a (n, m, m)
+            tensor.
         TypeError: If the weights are not a pd.Series, np.ndarray, list of
             values, or None.
 
@@ -103,7 +106,21 @@ def generate_consensus_matrix(
         np.ndarray: A consensus matrix computed as the weighted sum of the input
             matrices.
     """
-    adjacency_tensor = np.stack(matrices, axis=0)
+    if isinstance(matrices, list):
+        adjacency_tensor = np.stack(matrices, axis=0)
+    elif isinstance(matrices, np.ndarray):
+        if (matrices.ndim == 3) and (matrices.shape[1] == matrices.shape[2]):
+            adjacency_tensor = matrices
+        else:
+            raise ValueError(
+                "Invalid shape for adjacency matrix. Must be a (n, m, m) "
+                "tensor."
+            )
+    else:
+        raise TypeError(
+            f"Invalid type for matrices: {type(matrices)}. Must be a list of "
+            "matrices or a (n, m, m) tensor."
+        )
 
     if weights is None:
         weights_vector = np.ones(len(matrices))
