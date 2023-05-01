@@ -1,5 +1,7 @@
 import bs4
 import requests
+import numpy as np
+import numpy.typing as npt
 
 from squidalytics.analytics.build_consensus.main import (
     bin_abilities,
@@ -156,12 +158,12 @@ def scrape_sendou_builds(
     return builds_data
 
 
-def restrict_player_influence(builds: list[dict]) -> list[float]:
+def restrict_player_influence(builds: list[dict]) -> npt.NDArray[np.float64]:
     # Count the number of builds submitted by each player.
     counter = {}
     for build in builds:
         author = build["author"]
-        counter["author"] = counter.get(author, 0) + 1
+        counter[author] = counter.get(author, 0) + 1
 
     # Calculate the weight for each build.
     weights = []
@@ -169,24 +171,25 @@ def restrict_player_influence(builds: list[dict]) -> list[float]:
         author = build["author"]
         weights.append(1 / counter[author])
 
-    return weights
+    return np.array(weights)
 
 
 def plus_influence(
     builds: list[dict],
     base_multiplier: float = 1.0,
     plus_multiplier: float = 1.2,
-) -> list[float]:
+) -> npt.NDArray[np.float64]:
     weights = []
     for build in builds:
         plus = build["plus"]
-        weights.append(base_multiplier * plus_multiplier**plus)
-    return weights
+        value = base_multiplier * plus_multiplier**plus if plus > 0 else 1
+        weights.append(value)
+    return np.array(weights)
 
 
 def modes_filter(
     builds: list[dict], modes: list[str], invert: bool = False
-) -> list[float]:
+) -> npt.NDArray[np.float64]:
     weights = []
     value_if_true = 1 if not invert else 0
     value_if_false = 0 if not invert else 1
@@ -196,4 +199,4 @@ def modes_filter(
             weights.append(value_if_true)
         else:
             weights.append(value_if_false)
-    return weights
+    return np.array(weights)
