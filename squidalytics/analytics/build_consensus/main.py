@@ -1,9 +1,26 @@
+import itertools as it
+
 import networkx as nx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
 from squidalytics.constants import ABILITIES, PRIMARY_ONLY
+
+
+def calculate_num_bins(ability_points: int, bin_size: int = 10) -> int:
+    """Calculate the number of bins for an ability.
+
+    Args:
+        ability_points (int): The number of ability points.
+
+        bin_size (int): The size of the bins. Defaults to 10.
+
+    Returns:
+        int: The number of bins.
+    """
+
+    return int(np.ceil(ability_points / bin_size))
 
 
 def bin_abilities(abilities: dict[str, int], bin_size: int = 10) -> set[str]:
@@ -32,7 +49,7 @@ def bin_abilities(abilities: dict[str, int], bin_size: int = 10) -> set[str]:
         if ability in PRIMARY_ONLY:
             out.add(ability)
         elif ability in ABILITIES:
-            num_bins = ability_points // bin_size
+            num_bins = calculate_num_bins(ability_points, bin_size)
             for i in range(num_bins):
                 j = i + 1
                 bin_name = f"{ability}: {i * bin_size + 1}-{j * bin_size}"
@@ -42,8 +59,29 @@ def bin_abilities(abilities: dict[str, int], bin_size: int = 10) -> set[str]:
     return out
 
 
+def generate_all_abilities(bin_size: int = 10) -> list[str]:
+    """Generate a list of all abilities, including binned abilities.
+
+    Args:
+        bin_size (int, optional): The size of the bins. Defaults to 10.
+
+    Returns:
+        list[str]: A list of all abilities, including binned abilities.
+    """
+    out = []
+    num_bins = calculate_num_bins(57, bin_size)
+    for ability in PRIMARY_ONLY:
+        out.append(ability)
+    for ability in ABILITIES:
+        for i in range(num_bins):
+            j = i + 1
+            bin_name = f"{ability}: {i * bin_size + 1}-{j * bin_size}"
+            out.append(bin_name)
+    return out
+
+
 def generate_adjacency_matrix(
-    abilities: set[str], all_abilities: list[str]
+    abilities: set[str], all_abilities: list[str], tensor_rank: int = 2
 ) -> np.ndarray:
     """Generate an adjacency matrix for the given abilities. This matrix will
     have the abilities from the given set as columns and rows and will be filled
@@ -58,6 +96,7 @@ def generate_adjacency_matrix(
             matrix.
         all_abilities (list[str]): A list of all abilities, used for determining
             the index of each ability in the matrix.
+        tensor_rank (int): The rank of the adjacency tensor. Defaults to 2.
 
     Returns:
         np.ndarray: An adjacency matrix with the abilities from the given set as
@@ -65,8 +104,10 @@ def generate_adjacency_matrix(
             for unconnected abilities.
     """
     num_abilities = len(all_abilities)
-    adjacency_matrix = np.zeros((num_abilities, num_abilities), dtype=np.int64)
+    shape = (num_abilities,) * tensor_rank
+    adjacency_matrix = np.zeros(shape, dtype=np.int64)
     abilities_list = list(abilities)
+
     for i in range(len(abilities_list)):
         for j in range(i, len(abilities_list)):
             ability_i_idx = all_abilities.index(abilities_list[i])
@@ -74,6 +115,42 @@ def generate_adjacency_matrix(
             adjacency_matrix[ability_i_idx, ability_j_idx] = 1
             adjacency_matrix[ability_j_idx, ability_i_idx] = 1
     return adjacency_matrix
+
+
+def generate_adjacency_tensor(
+    abilities: set[str], all_abilities: list[str], tensor_rank: int = 2
+) -> list[int]:
+    """Generate an adjacency tensor for the given abilities. This tensor is
+    sparse and as a result is stored as a list of integers. This is much more
+    memory efficient than a dense adjacency matrix.
+
+
+    Args:
+        abilities (set[str]): A set of abilities to be included in the adjacency
+            tensor.
+        all_abilities (list[str]): A list of all abilities, used for determining
+            the index of each ability in the tensor.
+        tensor_rank (int): The rank of the adjacency tensor. Defaults to 2.
+
+    Returns:
+        list[int]: An index representation of the sparse adjacency tensor.
+    """
+    abilities_list = list(abilities)
+    abilities_idx = [all_abilities.index(ability) for ability in abilities_list]
+    return list(it.product(abilities_idx, repeat=tensor_rank))
+
+
+def einsum_str(rank: int) -> str:
+    """Generate an einsum string for a tensor of the given rank.
+
+    Args:
+        rank (int): The rank of the tensor.
+
+    Returns:
+        str: An einsum string for a tensor of the given rank.
+    """
+    tensor = "".join([chr(i) for i in range(97, 97 + rank)])
+    return f"{tensor},{tensor[0]}->{tensor[1:]}"
 
 
 def generate_consensus_matrix(
@@ -103,17 +180,17 @@ def generate_consensus_matrix(
             values, or None.
 
     Returns:
-        np.ndarray: A consensus matrix computed as the weighted sum of the input
+        np.ndarray: A consensus tensor computed as the weighted sum of the input
             matrices.
     """
     if isinstance(matrices, list):
         adjacency_tensor = np.stack(matrices, axis=0)
     elif isinstance(matrices, np.ndarray):
-        if (matrices.ndim == 3) and (matrices.shape[1] == matrices.shape[2]):
+        if all([dim == matrices.shape[1] for dim in matrices.shape[1:]]):
             adjacency_tensor = matrices
         else:
             raise ValueError(
-                "Invalid shape for adjacency matrix. Must be a (n, m, m) "
+                "Invalid shape for adjacency matrix. Must be a (n, m, m, ...) "
                 "tensor."
             )
     else:
@@ -136,10 +213,11 @@ def generate_consensus_matrix(
             "pd.Series, np.ndarray, a list of values, or None."
         )
 
-    # Use einsum to multiply the (n, m, m) tensor by the (n, ) weights vector,
-    # which is equivalent to multiplying each matrix by its weight and then
-    # summing them together
-    return np.einsum("ijk,i->jk", adjacency_tensor, weights_vector)
+    # Use einsum to multiply the (n, m, m, ...) tensor by the (n, ) weights
+    # vector, which is equivalent to multiplying each matrix by its weight and
+    # then summing them together
+    einsum_string = einsum_str(adjacency_tensor.ndim)
+    return np.einsum(einsum_string, adjacency_tensor, weights_vector)
 
 
 def calculate_width_by_connection(

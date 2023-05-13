@@ -9,8 +9,8 @@ import requests
 
 from squidalytics.analytics.build_consensus.main import (
     bin_abilities,
-    generate_adjacency_matrix,
-    generate_consensus_matrix,
+    generate_adjacency_tensor,
+    generate_all_abilities,
 )
 
 base_url = "https://sendou.ink/builds"
@@ -134,24 +134,13 @@ def bin_builds(builds: list[dict], bin_size: int = 10) -> list[dict]:
     ]
 
 
-def get_all_abilities(builds: list[dict]) -> list[str]:
-    abilities = set()
-    for build in builds:
-        for ability in build["abilities"]:
-            abilities.add(ability)
-
-    abilities_list = list(abilities)
-    abilities_list.sort()
-    return abilities_list
-
-
 def assign_adjacency_matrix(
-    builds: list[dict], all_abilities: list[str]
+    builds: list[dict], all_abilities: list[str], tensor_rank: int = 2
 ) -> list[dict]:
     for build in builds:
         abilities_list = list(build["abilities"])
-        build["adjacency_tensor"] = generate_adjacency_matrix(
-            abilities_list, all_abilities
+        build["adjacency_tensor"] = generate_adjacency_tensor(
+            abilities_list, all_abilities, tensor_rank
         )
     return builds
 
@@ -167,13 +156,14 @@ def scrape_weapon_builds(
     builds = soup.find_all("div", class_="build")
     builds_data = get_builds_data(builds, hash_list)
     builds_data = bin_builds(builds_data, bin_size)
-    all_abilities = get_all_abilities(builds_data)
-    builds_data = assign_adjacency_matrix(builds_data, all_abilities)
+    all_abilities = generate_all_abilities(bin_size=bin_size)
     return builds_data
 
 
 def scrape_sendou_builds(
-    limit: int, bin_size: int = 10, hash_list: list[str] | None = None
+    limit: int,
+    bin_size: int = 10,
+    hash_list: list[str] | None = None,
 ) -> list[dict[list[dict]]]:
     base_page = requests.get(base_url)
     soup = bs4.BeautifulSoup(base_page.content, "html.parser")
@@ -192,7 +182,10 @@ def scrape_sendou_builds(
             weapon = cast(bs4.element.Tag, weapon)
             weapon_name = weapon.attrs["href"].split("/")[-1]
             weapon_data = scrape_weapon_builds(
-                weapon_name, limit, bin_size, hash_list
+                weapon_name,
+                limit,
+                bin_size,
+                hash_list=hash_list,
             )
             weapons_list.append(
                 {
