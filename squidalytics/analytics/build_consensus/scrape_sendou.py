@@ -194,10 +194,12 @@ def scrape_sendou_builds(
             weapon_data = scrape_weapon_builds(
                 weapon_name, limit, bin_size, hash_list
             )
-            weapons_list.append({
-                "weapon": weapon_name,
-                "builds": weapon_data,
-            })
+            weapons_list.append(
+                {
+                    "weapon": weapon_name,
+                    "builds": weapon_data,
+                }
+            )
         sub_out["weapons"] = weapons_list
         out.append(sub_out)
     return out
