@@ -1,7 +1,11 @@
+import hashlib
+import json
+from typing import cast
+
 import bs4
-import requests
 import numpy as np
 import numpy.typing as npt
+import requests
 
 from squidalytics.analytics.build_consensus.main import (
     bin_abilities,
@@ -43,7 +47,7 @@ ability_map_disc = {
 }
 
 
-def build_url(weapon: str, limit: int = 48) -> str:
+def build_weapon_url(weapon: str, limit: int = 48) -> str:
     return f"{base_url}/{weapon}?limit={limit}"
 
 
@@ -102,13 +106,20 @@ def get_misc_data(build: bs4.element.Tag) -> dict:
 def get_build_data(build: bs4.element.Tag) -> dict:
     abilities = get_abilities(build)
     misc_data = get_misc_data(build)
-    return {**misc_data, "abilities": abilities}
+    out = {**misc_data, "abilities": abilities}
+    hash = hashlib.sha256(json.dumps(out).encode("utf-8")).hexdigest()
+    out["hash"] = hash
+    return out
 
 
-def get_builds_data(builds: list[bs4.element.Tag]) -> list[dict]:
+def get_builds_data(
+    builds: list[bs4.element.Tag], hash_list: list[str] | None = None
+) -> list[dict]:
     builds_data = []
     for build in builds:
         build_data = get_build_data(build)
+        if (hash_list is not None) and (build_data["hash"] in hash_list):
+            break
         builds_data.append(build_data)
     return builds_data
 
@@ -139,23 +150,57 @@ def assign_adjacency_matrix(
 ) -> list[dict]:
     for build in builds:
         abilities_list = list(build["abilities"])
-        build["adjacency_matrix"] = generate_adjacency_matrix(
+        build["adjacency_tensor"] = generate_adjacency_matrix(
             abilities_list, all_abilities
         )
     return builds
 
 
-def scrape_sendou_builds(
-    weapon: str, limit: int, bin_size: int = 10
+def scrape_weapon_builds(
+    weapon: str,
+    limit: int,
+    bin_size: int = 10,
+    hash_list: list[str] | None = None,
 ) -> list[dict]:
-    page = requests.get(build_url(weapon, limit))
+    page = requests.get(build_weapon_url(weapon, limit))
     soup = bs4.BeautifulSoup(page.content, "html.parser")
     builds = soup.find_all("div", class_="build")
-    builds_data = get_builds_data(builds)
+    builds_data = get_builds_data(builds, hash_list)
     builds_data = bin_builds(builds_data, bin_size)
     all_abilities = get_all_abilities(builds_data)
     builds_data = assign_adjacency_matrix(builds_data, all_abilities)
     return builds_data
+
+
+def scrape_sendou_builds(
+    limit: int, bin_size: int = 10, hash_list: list[str] | None = None
+) -> list[dict[list[dict]]]:
+    base_page = requests.get(base_url)
+    soup = bs4.BeautifulSoup(base_page.content, "html.parser")
+    categories = soup.find_all("div", class_="builds__category")
+    out: list[dict[list[dict]]] = []
+    for category in categories:
+        category = cast(bs4.element.Tag, category)
+        sub_out = {}
+        sub_out["category"] = category.find(
+            "div", class_="builds__category__header"
+        ).text
+        weapons = category.find_all("a", class_="builds__category__weapon")
+        weapons_list: list[dict[list[dict]]] = []
+
+        for weapon in weapons:
+            weapon = cast(bs4.element.Tag, weapon)
+            weapon_name = weapon.attrs["href"].split("/")[-1]
+            weapon_data = scrape_weapon_builds(
+                weapon_name, limit, bin_size, hash_list
+            )
+            weapons_list.append({
+                "weapon": weapon_name,
+                "builds": weapon_data,
+            })
+        sub_out["weapons"] = weapons_list
+        out.append(sub_out)
+    return out
 
 
 def restrict_player_influence(builds: list[dict]) -> npt.NDArray[np.float64]:
@@ -182,7 +227,9 @@ def plus_influence(
     weights = []
     for build in builds:
         plus = build["plus"]
-        value = base_multiplier * plus_multiplier**plus if plus > 0 else 1
+        value = (
+            base_multiplier * plus_multiplier ** (4 - plus) if plus > 0 else 1
+        )
         weights.append(value)
     return np.array(weights)
 
